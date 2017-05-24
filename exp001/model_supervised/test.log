@@ -1,0 +1,2 @@
+[INFO 2017-05-24 16:06:40,820 main.py:79] Namespace(batch_size=32, display=True, image_size=11, init_model_path='./model/final.pth', learning_rate=0.01, method='unsupervised', motion_range=1, save_dir='./model', test=True, test_epoch=100, test_interval=500, train=False, train_epoch=1000)
+[INFO 2017-05-24 16:06:40,960 main.py:48] average testing accuracy: 1.00
