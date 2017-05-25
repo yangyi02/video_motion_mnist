@@ -7,10 +7,15 @@ def motion_dict(m_range):
     y = numpy.linspace(-m_range, m_range, 2*m_range+1)
     m_x, m_y = numpy.meshgrid(x, y)
     m_x, m_y, = m_x.reshape(-1).astype(int), m_y.reshape(-1).astype(int)
+    # m_kernel = Variable(torch.zeros((1, len(m_x), 2*m_range+1, 2*m_range+1)))
+    # if torch.cuda.is_available():
+    #     m_kernel = m_kernel.cuda()
+    m_kernel = numpy.zeros(1, len(m_x), 2*m_range+1, 2*m_range+1)
     for i in range(len(m_x)):
         m_dict[(m_x[i], m_y[i])] = i
         reverse_m_dict[i] = (m_x[i], m_y[i])
-    return m_dict, reverse_m_dict
+        m_kernel[:, i, m_y[i]+m_range, m_x[i]+m_range] = 1
+    return m_dict, reverse_m_dict, m_kernel
 
 
 def generate_images(args, m_dict, reverse_m_dict):
@@ -20,8 +25,9 @@ def generate_images(args, m_dict, reverse_m_dict):
     im_big[:, :, m_range:-m_range, m_range:-m_range] = im1
     im2 = numpy.zeros((batch_size, 1, im_size, im_size))
     m_label = numpy.random.randint(0, len(m_dict), size=batch_size)
+    gt_motion = numpy.zeros((batch_size, 1, im_size, im_size))
     for i in range(batch_size):
         (m_x, m_y) = reverse_m_dict[m_label[i]]
         im2[i, :, :, :] = im_big[i, :, m_range+m_y:m_range+m_y+im_size, m_range+m_x:m_range+m_x+im_size]
-    return im1, im2, m_label
-
+        gt_motion[i, :, :, :] = m_label[i]
+    return im1, im2, gt_motion.astype(int)
