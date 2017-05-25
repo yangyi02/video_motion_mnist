@@ -34,10 +34,9 @@ def generate_images(args, images, m_dict, reverse_m_dict):
     im_channel = images.shape[1]
     idx = numpy.random.permutation(images.shape[0])
     im1 = images[idx[0:batch_size], :, :, :]
-    # im_big = numpy.random.rand(batch_size, 1, im_size + m_range * 2, im_size + m_range * 2)
-    im_big = numpy.zeros((batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2))
+    im_big = numpy.random.rand(batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2)
     im_big[:, :, m_range:-m_range, m_range:-m_range] = im1
-    im2 = numpy.zeros((batch_size, 1, im_size, im_size))
+    im2 = numpy.zeros((batch_size, im_channel, im_size, im_size))
     m_label = numpy.random.randint(0, len(m_dict), size=batch_size)
     gt_motion = numpy.zeros((batch_size, 1, im_size, im_size))
     for i in range(batch_size):
@@ -46,9 +45,9 @@ def generate_images(args, images, m_dict, reverse_m_dict):
                           m_range + m_x:m_range + m_x + im_size]
         gt_motion[i, :, :, :] = m_label[i]
 
-    im_big = numpy.random.rand(batch_size, 1, im_size + m_range * 2, im_size + m_range * 2)
+    im_big = numpy.random.rand(batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2)
     im_big[:, :, m_range:-m_range, m_range:-m_range] = im2
-    im3 = numpy.zeros((batch_size, 1, im_size, im_size))
+    im3 = numpy.zeros((batch_size, im_channel, im_size, im_size))
     for i in range(batch_size):
         (m_x, m_y) = reverse_m_dict[m_label[i]]
         im3[i, :, :, :] = im_big[i, :, m_range + m_y:m_range + m_y + im_size,
