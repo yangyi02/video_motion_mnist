@@ -94,7 +94,7 @@ def main():
     args = parse_args()
     logging.info(args)
     m_dict, reverse_m_dict, m_kernel = motion_dict(args.motion_range)
-    m_kernel = torch.from_numpy(m_kernel)
+    m_kernel = Variable(torch.from_numpy(m_kernel).float())
     model = FullyConvNet2(args.image_size, len(m_dict))
     if torch.cuda.is_available():
         model = model.cuda()

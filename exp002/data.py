@@ -7,10 +7,7 @@ def motion_dict(m_range):
     y = numpy.linspace(-m_range, m_range, 2*m_range+1)
     m_x, m_y = numpy.meshgrid(x, y)
     m_x, m_y, = m_x.reshape(-1).astype(int), m_y.reshape(-1).astype(int)
-    # m_kernel = Variable(torch.zeros((1, len(m_x), 2*m_range+1, 2*m_range+1)))
-    # if torch.cuda.is_available():
-    #     m_kernel = m_kernel.cuda()
-    m_kernel = numpy.zeros(1, len(m_x), 2*m_range+1, 2*m_range+1)
+    m_kernel = numpy.zeros((1, len(m_x), 2*m_range+1, 2*m_range+1))
     for i in range(len(m_x)):
         m_dict[(m_x[i], m_y[i])] = i
         reverse_m_dict[i] = (m_x[i], m_y[i])
