@@ -5,9 +5,9 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy
 import os
-from skimage import io, transform
 import matplotlib.pyplot as plt
 import h5py
+import math
 
 
 def motion_dict(motion_range):
@@ -26,7 +26,7 @@ def motion_dict(motion_range):
     return m_dict, reverse_m_dict, motion_kernel
 
 
-def generate_images(m_dict, reverse_m_dict, im_size, im_channel, motion_range, images, batch_size=32):
+def generate_images1(m_dict, reverse_m_dict, im_size, im_channel, motion_range, images, batch_size=32):
     show = False
     noise_magnitude = 0.5
     # im1 = numpy.random.rand(batch_size, im_channel, im_size, im_size)
@@ -111,7 +111,7 @@ def generate_images(m_dict, reverse_m_dict, im_size, im_channel, motion_range, i
     return im1, im2, im3, gt_motion.astype(int)
 
 
-def generate_images1(m_dict, reverse_m_dict, im_size, im_channel, motion_range, images, batch_size=32):
+def generate_images(m_dict, reverse_m_dict, im_size, im_channel, motion_range, images, batch_size=32):
     show = False
     noise_magnitude = 0.5
     # im1 = numpy.random.rand(batch_size, im_channel, im_size, im_size)
@@ -245,26 +245,6 @@ def generate_images1(m_dict, reverse_m_dict, im_size, im_channel, motion_range, 
     return im1, im2, im3, gt_motion.astype(int)
 
 
-def load_images(image_size, image_dir='images'):
-    script_dir = os.path.dirname(__file__)  # absolute dir the script is in
-    image_files = os.listdir(os.path.join(script_dir, image_dir))
-    images = []
-    for image_file in image_files:
-        if image_file.endswith('.jpg'):
-            print('loading %s' % image_file)
-            image = io.imread(os.path.join(script_dir, image_dir, image_file))
-            image = transform.resize(image, (image_size, image_size), mode='constant')
-            images.append(image)
-    # for i in range(len(images)):
-    #     plt.imshow(images[i])
-    images = numpy.asarray(images)
-    images = images.swapaxes(2, 3).swapaxes(1, 2)
-    train_test_split = int(round(len(images) * 0.9))
-    train_images = images[0:train_test_split, :, :, :]
-    test_images = images[train_test_split:, :, :, :]
-    return train_images, test_images
-
-
 def load_mnist(file_name='mnist.h5'):
     script_dir = os.path.dirname(__file__)  # absolute dir the script is in
     f = h5py.File(os.path.join(script_dir, file_name))
@@ -280,18 +260,30 @@ class FullyConvNet(nn.Module):
         super(FullyConvNet, self).__init__()
         self.conv0 = nn.Conv2d(2*im_channel, 32, 3, 1, 1)
         self.bn0 = nn.BatchNorm2d(32)
-        self.conv1 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn3 = nn.BatchNorm2d(32)
-        self.conv4 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn4 = nn.BatchNorm2d(32, 32)
-        self.conv5 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn5 = nn.BatchNorm2d(32)
-        self.conv6 = nn.Conv2d(32, 32, 3, 1, 1)
-        self.bn6 = nn.BatchNorm2d(32)
+        self.conv1_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn1_1 = nn.BatchNorm2d(32)
+        self.conv1_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn1_2 = nn.BatchNorm2d(32)
+        self.conv2_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn2_1 = nn.BatchNorm2d(32)
+        self.conv2_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn2_2 = nn.BatchNorm2d(32)
+        self.conv3_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn3_1 = nn.BatchNorm2d(32)
+        self.conv3_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn3_2 = nn.BatchNorm2d(32)
+        self.conv4_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn4_1 = nn.BatchNorm2d(32, 32)
+        self.conv4_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn4_2 = nn.BatchNorm2d(32)
+        self.conv5_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn5_1 = nn.BatchNorm2d(32)
+        self.conv5_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn5_2 = nn.BatchNorm2d(32)
+        self.conv6_1 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn6_1 = nn.BatchNorm2d(32)
+        self.conv6_2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn6_2 = nn.BatchNorm2d(32)
         self.conv = nn.Conv2d(32, n_class, 3, 1, 1)
         self.im_size = im_size
         self.im_channel = im_channel
@@ -300,19 +292,25 @@ class FullyConvNet(nn.Module):
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), 1)
         x = self.bn0(self.conv0(x))
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.bn4(self.conv4(x)))
-        x = F.relu(self.bn5(self.conv5(x)))
-        x = F.relu(self.bn6(self.conv6(x)))
+        y = F.relu(self.bn1_1(self.conv1_1(x)))
+        x = F.relu(self.bn1_2(self.conv1_2(y) + x))
+        y = F.relu(self.bn2_1(self.conv2_1(x)))
+        x = F.relu(self.bn2_2(self.conv2_2(y) + x))
+        y = F.relu(self.bn3_1(self.conv3_1(x)))
+        x = F.relu(self.bn3_2(self.conv3_2(y) + x))
+        y = F.relu(self.bn4_1(self.conv4_1(x)))
+        x = F.relu(self.bn4_2(self.conv4_2(y) + x))
+        y = F.relu(self.bn5_1(self.conv5_1(x)))
+        x = F.relu(self.bn5_2(self.conv5_2(y) + x))
+        y = F.relu(self.bn6_1(self.conv6_1(x)))
+        x = F.relu(self.bn6_2(self.conv6_2(y) + x))
         motion = self.conv(x)
         return motion
 
 
-class FullyConvNet2(nn.Module):
+class FullyConvNetDecorrelate(nn.Module):
     def __init__(self, im_size, im_channel, n_class):
-        super(FullyConvNet2, self).__init__()
+        super(FullyConvNetDecorrelate, self).__init__()
         num_hidden = 64
         self.conv0 = nn.Conv2d(2*im_channel, num_hidden, 3, 1, 1)
         self.bn0 = nn.BatchNorm2d(num_hidden)
@@ -340,7 +338,8 @@ class FullyConvNet2(nn.Module):
         self.bn6_1 = nn.BatchNorm2d(num_hidden)
         self.conv6_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
         self.bn6_2 = nn.BatchNorm2d(num_hidden)
-        self.conv = nn.Conv2d(num_hidden, n_class, 3, 1, 1)
+        self.conv_x = nn.Conv2d(num_hidden, int(math.sqrt(n_class)), 3, 1, 1)
+        self.conv_y = nn.Conv2d(num_hidden, int(math.sqrt(n_class)), 3, 1, 1)
         self.im_size = im_size
         self.im_channel = im_channel
         self.n_class = n_class
@@ -360,8 +359,72 @@ class FullyConvNet2(nn.Module):
         x = F.relu(self.bn5_2(self.conv5_2(y) + x))
         y = F.relu(self.bn6_1(self.conv6_1(x)))
         x = F.relu(self.bn6_2(self.conv6_2(y) + x))
-        motion = self.conv(x)
-        return motion
+        motion_x = self.conv_x(x)
+        motion_y = self.conv_y(x)
+        return motion_x, motion_y
+
+
+class FullyConvNet2Decorrelate(nn.Module):
+    def __init__(self, im_size, im_channel, n_class):
+        super(FullyConvNet2Decorrelate, self).__init__()
+        num_hidden = 32
+        self.conv0 = nn.Conv2d(im_channel, num_hidden, 3, 1, 1)
+        self.bn0 = nn.BatchNorm2d(num_hidden)
+        self.conv1_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn1_1 = nn.BatchNorm2d(num_hidden)
+        self.conv1_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn1_2 = nn.BatchNorm2d(num_hidden)
+        self.conv2_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn2_1 = nn.BatchNorm2d(num_hidden)
+        self.conv2_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn2_2 = nn.BatchNorm2d(num_hidden)
+        self.conv3_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn3_1 = nn.BatchNorm2d(num_hidden)
+        self.conv3_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn3_2 = nn.BatchNorm2d(num_hidden)
+        self.conv4_1 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn4_1 = nn.BatchNorm2d(2*num_hidden)
+        self.conv4_2 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn4_2 = nn.BatchNorm2d(2*num_hidden)
+        self.conv5_1 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn5_1 = nn.BatchNorm2d(2*num_hidden)
+        self.conv5_2 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn5_2 = nn.BatchNorm2d(2*num_hidden)
+        self.conv6_1 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn6_1 = nn.BatchNorm2d(2*num_hidden)
+        self.conv6_2 = nn.Conv2d(2*num_hidden, 2*num_hidden, 3, 1, 1)
+        self.bn6_2 = nn.BatchNorm2d(2*num_hidden)
+        self.conv_x = nn.Conv2d(2*num_hidden, int(math.sqrt(n_class)), 3, 1, 1)
+        self.conv_y = nn.Conv2d(2*num_hidden, int(math.sqrt(n_class)), 3, 1, 1)
+        self.im_size = im_size
+        self.im_channel = im_channel
+        self.n_class = n_class
+
+    def forward(self, x1, x2):
+        x1 = self.bn0(self.conv0(x1))
+        y1 = F.relu(self.bn1_1(self.conv1_1(x1)))
+        x1 = F.relu(self.bn1_2(self.conv1_2(y1) + x1))
+        y1 = F.relu(self.bn2_1(self.conv2_1(x1)))
+        x1 = F.relu(self.bn2_2(self.conv2_2(y1) + x1))
+        y1 = F.relu(self.bn3_1(self.conv3_1(x1)))
+        x1 = F.relu(self.bn3_2(self.conv3_2(y1) + x1))
+        x2 = self.bn0(self.conv0(x2))
+        y2 = F.relu(self.bn1_1(self.conv1_1(x2)))
+        x2 = F.relu(self.bn1_2(self.conv1_2(y2) + x2))
+        y2 = F.relu(self.bn2_1(self.conv2_1(x2)))
+        x2 = F.relu(self.bn2_2(self.conv2_2(y2) + x2))
+        y2 = F.relu(self.bn3_1(self.conv3_1(x2)))
+        x2 = F.relu(self.bn3_2(self.conv3_2(y2) + x2))
+        x = torch.cat((x1, x2), 1)
+        y = F.relu(self.bn4_1(self.conv4_1(x)))
+        x = F.relu(self.bn4_2(self.conv4_2(y) + x))
+        y = F.relu(self.bn5_1(self.conv5_1(x)))
+        x = F.relu(self.bn5_2(self.conv5_2(y) + x))
+        y = F.relu(self.bn6_1(self.conv6_1(x)))
+        x = F.relu(self.bn6_2(self.conv6_2(y) + x))
+        motion_x = self.conv_x(x)
+        motion_y = self.conv_y(x)
+        return motion_x, motion_y
 
 
 def train_supervised(model, motion_range, m_dict, reverse_m_dict, train_images, n_epoch=2000):
@@ -374,12 +437,23 @@ def train_supervised(model, motion_range, m_dict, reverse_m_dict, train_images, 
         gt_motion = Variable(torch.from_numpy(gt_motion))
         if torch.cuda.is_available():
             im1, im2, gt_motion = im1.cuda(), im2.cuda(), gt_motion.cuda()
-        motion = model(im1, im2)
+        motion_x, motion_y = model(im1, im2)
+        mask_x, mask_y = F.softmax(motion_x), F.softmax(motion_y)
+        [batch_size, im_channel, height, width] = im2.size()
+        mask = Variable(torch.Tensor(batch_size, (2 * motion_range + 1) ** 2, height, width))
+        if torch.cuda.is_available():
+            mask = mask.cuda()
+        for i in range(2 * motion_range + 1):
+            for j in range(2 * motion_range + 1):
+                mask[:, i * (2 * motion_range + 1) + j, :, :] = mask_y[:, i, :, :] * mask_x[:, j, :, :]
         gt_motion = gt_motion[:, :, motion_range:-motion_range, motion_range:-motion_range]
-        motion = motion[:, :, motion_range:-motion_range, motion_range:-motion_range]
+        motion = mask[:, :, motion_range:-motion_range, motion_range:-motion_range]
         motion = motion.transpose(1, 2).transpose(2, 3).contiguous().view(-1, model.n_class)
+        motion = motion + 1e-5
+        motion = torch.log(motion)
         gt_motion = gt_motion.contiguous().view(-1)
-        loss = F.cross_entropy(motion, gt_motion)
+        # loss = F.cross_entropy(motion, gt_motion)
+        loss = F.nll_loss(motion, gt_motion)
         loss.backward()
         optimizer.step()
         print('epoch %d, training loss: %.2f' % (epoch, loss.data[0]))
@@ -395,8 +469,16 @@ def test_supervised(model, motion_range, m_dict, reverse_m_dict, test_images, n_
         gt_motion = Variable(torch.from_numpy(gt_motion))
         if torch.cuda.is_available():
             im1, im2, gt_motion = im1.cuda(), im2.cuda(), gt_motion.cuda()
-        motion = model(im1, im2)
-        motion = motion.data.max(1)[1]
+        motion_x, motion_y = model(im1, im2)
+        mask_x, mask_y = F.softmax(motion_x), F.softmax(motion_y)
+        [batch_size, im_channel, height, width] = im2.size()
+        mask = Variable(torch.Tensor(batch_size, (2 * motion_range + 1) ** 2, height, width))
+        if torch.cuda.is_available():
+            mask = mask.cuda()
+        for i in range(2 * motion_range + 1):
+            for j in range(2 * motion_range + 1):
+                mask[:, i * (2 * motion_range + 1) + j, :, :] = mask_y[:, i, :, :] * mask_x[:, j, :,:]
+        motion = mask.data.max(1)[1]
         accuracy = motion.eq(gt_motion.data).cpu().sum() * 1.0 / motion.numel()
         print('testing accuracy: %.2f' % accuracy)
         val_accuracy.append(accuracy)
@@ -412,7 +494,7 @@ def test_supervised(model, motion_range, m_dict, reverse_m_dict, test_images, n_
     return numpy.mean(numpy.asarray(val_accuracy))
 
 
-def train_unsupervised(model, motion_range, m_dict, reverse_m_dict, motion_kernel, train_images, n_epoch=2000):
+def train_unsupervised(model, motion_range, m_dict, reverse_m_dict, motion_kernel, train_images, n_epoch=1000):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     for epoch in range(n_epoch):
         optimizer.zero_grad()
@@ -423,14 +505,24 @@ def train_unsupervised(model, motion_range, m_dict, reverse_m_dict, motion_kerne
         gt_motion = Variable(torch.from_numpy(gt_motion))
         if torch.cuda.is_available():
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
-        motion = model(im1, im2)
-        mask = F.softmax(motion)
+        motion_x, motion_y = model(im1, im2)
+        mask_x, mask_y = F.softmax(motion_x), F.softmax(motion_y)
         # mask = torch.from_numpy(numpy.zeros((16, 9, 9, 9))).float()
         # for i in range(im1.size()[0]):
         #     motion_label = gt_motion.data[i, 0, 0, 0]
         #     mask[i, motion_label, :, :] = 1
         # im = im1.expand_as(mask) * Variable(mask)
         [batch_size, im_channel, height, width] = im2.size()
+        # mask_x = mask_x.unsqueeze(1).expand((batch_size, 2*motion_range+1, 2*motion_range+1, height, width))
+        # mask_y = mask_y.unsqueeze(2).expand((batch_size, 2*motion_range+1, 2*motion_range+1, height, width))
+        # mask = mask_x * mask_y
+        # mask = mask.view(batch_size, -1, height, width)
+        mask = Variable(torch.Tensor(batch_size, (2*motion_range+1)**2, height, width))
+        if torch.cuda.is_available():
+            mask = mask.cuda()
+        for i in range(2*motion_range+1):
+            for j in range(2*motion_range+1):
+                mask[:, i*(2*motion_range+1)+j, :, :] = mask_y[:, i, :, :] * mask_x[:, j, :, :]
         im = im2.expand_as(mask) * mask
         # pred = Variable(torch.Tensor(im2.size()[0], im2.size()[1], im2.size()[2] - 2 * motion_range,
         #                              im2.size()[3] - 2 * motion_range))
@@ -451,14 +543,10 @@ def train_unsupervised(model, motion_range, m_dict, reverse_m_dict, motion_kerne
 
 def main():
     task = 'mnist'
-    im_size, im_channel, motion_range = 28, 3, 2
+    im_size, im_channel, motion_range = 28, 1, 2
     m_dict, reverse_m_dict, motion_kernel = motion_dict(motion_range)
-    if task == 'mnist':
-        train_images, test_images = load_mnist()
-        im_size, im_channel = 28, 1
-    else:
-        train_images, test_images = load_images(im_size)
-    model = FullyConvNet2(im_size, im_channel, len(m_dict))
+    train_images, test_images = load_mnist()
+    model = FullyConvNetDecorrelate(im_size, im_channel, len(m_dict))
     if torch.cuda.is_available():
         model = model.cuda()
     # train_supervised(model, motion_range, m_dict, reverse_m_dict, train_images)
