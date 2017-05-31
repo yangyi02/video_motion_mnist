@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DISPLAY=0
+DISPLAY=1
 MODEL_PATH="./model"
 INIT_MODEL="./model/final.pth"
 if [[ ! -e $MODEL_PATH ]]; then
