@@ -31,7 +31,7 @@ def generate_images(args, m_dict, reverse_m_dict):
         (m_x[i], m_y[i]) = reverse_m_dict[m_label[i]]
         gt_motion[i, :, :, :] = m_label[i]
     im2 = move_image(im1, m_x, m_y)
-    if args.display:
+    if False:
         display(im1, im2, gt_motion)
     return im1, im2, gt_motion.astype(int)
 
@@ -51,9 +51,6 @@ def move_image(im, m_x, m_y):
 
 
 def display(im1, im2, gt_motion):
-    logging.info(im1[0, :, :, :])
-    logging.info(im2[0, :, :, :])
-    logging.info(gt_motion[0, :, :, :])
     plt.figure(1)
     plt.subplot(1, 2, 1)
     plt.imshow(im1[0, :, :, :].squeeze())
@@ -65,7 +62,6 @@ def display(im1, im2, gt_motion):
 def unit_test():
     m_dict, reverse_m_dict, m_kernel = motion_dict(1)
     args = learning_args.parse_args()
-    args.display = True
     generate_images(args, m_dict, reverse_m_dict)
 
 if __name__ == '__main__':

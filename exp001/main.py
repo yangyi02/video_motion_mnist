@@ -60,13 +60,6 @@ def visualize(im1, im2, pred, motion, gt_motion):
     plt.subplot(2,4,4)
     im_diff = pred - im2
     plt.imshow(im_diff[0].cpu().data.numpy().squeeze(), cmap='gray')
-    # plt.subplot(2,4,5)
-    # plt.imshow(motion[0].cpu().numpy().squeeze())
-    # plt.subplot(2,4,6)
-    # plt.imshow(gt_motion[0].cpu().data.numpy().squeeze())
-    # plt.subplot(2,4,7)
-    # motion_diff = motion - gt_motion
-    # plt.imshow(motion_diff[0].cpu().data.numpy().squeeze())
     plt.show()
 
 
