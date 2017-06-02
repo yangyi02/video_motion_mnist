@@ -27,7 +27,7 @@ def generate_images(args, m_dict, reverse_m_dict):
     for i in range(batch_size):
         (m_x[i], m_y[i]) = reverse_m_dict[m_label[i]]
     im2 = move_image(im1, m_x, m_y)
-    if args.display:
+    if False:
         display(im1, im2, m_label)
     return im1, im2, m_label
 
@@ -47,9 +47,6 @@ def move_image(im, m_x, m_y):
 
 
 def display(im1, im2, m_label):
-    logging.info(im1[0, :, :, :])
-    logging.info(im2[0, :, :, :])
-    logging.info(m_label[0])
     plt.figure(1)
     plt.subplot(1, 2, 1)
     plt.imshow(im1[0, :, :, :].squeeze())
