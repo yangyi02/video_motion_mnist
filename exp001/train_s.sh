@@ -9,6 +9,11 @@ else
     exit
 fi
 
-CUDA_VISIBLE_DEVICES=1 python main.py --train --method=supervised --train_epoch=100 --test_interval=50 2>&1 | tee $MODEL_PATH/train.log
+CUDA_VISIBLE_DEVICES=1 python main.py \
+  --train \
+  --method=supervised \
+  --train_epoch=100 \
+  --test_interval=50 \
+  --motion_range=1 2>&1 | tee $MODEL_PATH/train.log
 
 cp train_s.sh $MODEL_PATH/train.sh

@@ -7,8 +7,6 @@ import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-# import matplotlib
-# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict
