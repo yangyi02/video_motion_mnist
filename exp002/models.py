@@ -54,3 +54,55 @@ class FullyConvNet2(nn.Module):
         motion = self.conv(x)
         return motion
 
+
+class FullyConvResNet(nn.Module):
+    def __init__(self, im_size, n_class):
+        super(FullyConvResNet, self).__init__()
+        num_hidden = 32
+        self.conv0 = nn.Conv2d(2, num_hidden, 3, 1, 1)
+        self.bn0 = nn.BatchNorm2d(num_hidden)
+        self.conv1_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn1_1 = nn.BatchNorm2d(num_hidden)
+        self.conv1_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn1_2 = nn.BatchNorm2d(num_hidden)
+        self.conv2_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn2_1 = nn.BatchNorm2d(num_hidden)
+        self.conv2_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn2_2 = nn.BatchNorm2d(num_hidden)
+        self.conv3_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn3_1 = nn.BatchNorm2d(num_hidden)
+        self.conv3_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn3_2 = nn.BatchNorm2d(num_hidden)
+        self.conv4_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn4_1 = nn.BatchNorm2d(num_hidden)
+        self.conv4_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn4_2 = nn.BatchNorm2d(num_hidden)
+        self.conv5_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn5_1 = nn.BatchNorm2d(num_hidden)
+        self.conv5_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn5_2 = nn.BatchNorm2d(num_hidden)
+        self.conv6_1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn6_1 = nn.BatchNorm2d(num_hidden)
+        self.conv6_2 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
+        self.bn6_2 = nn.BatchNorm2d(num_hidden)
+        self.conv = nn.Conv2d(num_hidden, n_class, 3, 1, 1)
+        self.im_size = im_size
+        self.n_class = n_class
+
+    def forward(self, x1, x2):
+        x = torch.cat((x1, x2), 1)
+        x = self.bn0(self.conv0(x))
+        y = F.relu(self.bn1_1(self.conv1_1(x)))
+        x = F.relu(self.bn1_2(self.conv1_2(y) + x))
+        y = F.relu(self.bn2_1(self.conv2_1(x)))
+        x = F.relu(self.bn2_2(self.conv2_2(y) + x))
+        y = F.relu(self.bn3_1(self.conv3_1(x)))
+        x = F.relu(self.bn3_2(self.conv3_2(y) + x))
+        y = F.relu(self.bn4_1(self.conv4_1(x)))
+        x = F.relu(self.bn4_2(self.conv4_2(y) + x))
+        y = F.relu(self.bn5_1(self.conv5_1(x)))
+        x = F.relu(self.bn5_2(self.conv5_2(y) + x))
+        y = F.relu(self.bn6_1(self.conv6_1(x)))
+        x = F.relu(self.bn6_2(self.conv6_2(y) + x))
+        motion = self.conv(x)
+        return motion

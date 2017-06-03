@@ -1,11 +1,12 @@
+only output one scalar for every two frames
+
 ### Synthetic motion on synthetic images
 The images are pure random values (0-1) at each pixel location.
 Image resolution: 11x11x1.
 motion range = 1 corresponds to 9 motion classes.
 motion range = 2 corresponds to 25 motion classes.
 
-only output one scalar for every two frames
-input: two frames
+input: two frames (11x11x2)
 output: global motion (1x1x9)
 
 | Global motion | Training Loss | Testing Accuracy (%) |

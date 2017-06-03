@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict
-from models import FullyConvNet, FullyConvNet2
+from models import FullyConvNet, FullyConvNet2, FullyConvResNet
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
