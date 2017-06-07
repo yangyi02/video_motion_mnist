@@ -11,12 +11,13 @@ motion range = 3 corresponds to 49 motion classes.
 
 input: two frames (11x11x2)
 output: motion mask (11x11x9)
+unsupervised output: second frame (11x11x1)
 
 | Global motion | Training Loss | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
 | mask, motion range = 1, supervised 2 frames | 0.00 | 100 |
 | mask, motion range = 2, supervised 2 frames | 0.00 | 100 |
-| mask, motion range = 3, supervised 3 frames | 0.06 | 98 |
+| mask, motion range = 3, supervised 2 frames | 0.06 | 98 |
 | mask, motion range = 1, unsupervised 2 frames | 0.40 | 11 (random guess) |
 | mask, motion range = 2, unsupervised 2 frames | 0.16 | 4 (random guess) |
 

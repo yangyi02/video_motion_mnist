@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict
-from models import FullyConvNet, FullyConvNet2, FullyConvNet3, FullyConvResNet
+from models import FullyConvNet, FullyConvNet2
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
@@ -39,8 +39,6 @@ def train_supervised(args, model, m_dict, reverse_m_dict, m_kernel):
         if torch.cuda.is_available():
             im1, im2, gt_motion = im1.cuda(), im2.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
-        # gt_motion = gt_motion[:, :, m_range:-m_range, m_range:-m_range]
-        # motion = motion[:, :, m_range:-m_range, m_range:-m_range]
         motion = motion.transpose(1, 2).transpose(2, 3).contiguous().view(-1, model.n_class)
         gt_motion = gt_motion.contiguous().view(-1)
         loss = F.cross_entropy(motion, gt_motion)
