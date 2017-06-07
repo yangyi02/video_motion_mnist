@@ -6,9 +6,6 @@ if [[ ! -e $MODEL_PATH ]]; then
     exit
 fi
 
-CUDA_VISIBLE_DEVICES=1 python main.py \
-  --test \
-  --init_model=./model/final.pth \
-  --motion_range=2 2>&1 | tee $MODEL_PATH/test.log
+CUDA_VISIBLE_DEVICES=1 python main.py --test --init_model=./model/final.pth --motion_range=1 2>&1 | tee $MODEL_PATH/test.log
 
 cp test.sh $MODEL_PATH

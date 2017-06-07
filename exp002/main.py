@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict
-from models import FullyConvNet, FullyConvNet2, FullyConvResNet
+from models import FullyConvNet, FullyConvNet2, FullyConvNet3, FullyConvResNet
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
@@ -29,6 +29,7 @@ def train_supervised(args, model, m_dict, reverse_m_dict, m_kernel):
     m_range = args.motion_range
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     best_test_acc = 0
+    train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
         im1, im2, gt_motion = generate_images(args, m_dict, reverse_m_dict)
@@ -38,14 +39,18 @@ def train_supervised(args, model, m_dict, reverse_m_dict, m_kernel):
         if torch.cuda.is_available():
             im1, im2, gt_motion = im1.cuda(), im2.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
-        gt_motion = gt_motion[:, :, m_range:-m_range, m_range:-m_range]
-        motion = motion[:, :, m_range:-m_range, m_range:-m_range]
+        # gt_motion = gt_motion[:, :, m_range:-m_range, m_range:-m_range]
+        # motion = motion[:, :, m_range:-m_range, m_range:-m_range]
         motion = motion.transpose(1, 2).transpose(2, 3).contiguous().view(-1, model.n_class)
         gt_motion = gt_motion.contiguous().view(-1)
         loss = F.cross_entropy(motion, gt_motion)
         loss.backward()
         optimizer.step()
-        logging.info('epoch %d, training loss: %.2f', epoch, loss.data[0])
+        train_loss.append(loss.data[0])
+        if len(train_loss) > 100:
+            train_loss.pop(0)
+        ave_loss = sum(train_loss) / float(len(train_loss))
+        logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
             best_test_acc = validate(args, model, m_dict, reverse_m_dict, m_kernel, best_test_acc)
@@ -63,13 +68,13 @@ def visualize(im1, im2, pred, motion, gt_motion):
     plt.subplot(2,4,4)
     im_diff = pred - im2
     plt.imshow(im_diff[0].cpu().data.numpy().squeeze(), cmap='gray')
-    # plt.subplot(2,4,5)
-    # plt.imshow(motion[0].cpu().numpy().squeeze())
-    # plt.subplot(2,4,6)
-    # plt.imshow(gt_motion[0].cpu().data.numpy().squeeze())
-    # plt.subplot(2,4,7)
-    # motion_diff = motion - gt_motion
-    # plt.imshow(motion_diff[0].cpu().data.numpy().squeeze())
+    plt.subplot(2,4,5)
+    plt.imshow(motion[0].cpu().numpy().squeeze())
+    plt.subplot(2,4,6)
+    plt.imshow(gt_motion[0].cpu().data.numpy().squeeze())
+    plt.subplot(2,4,7)
+    motion_diff = motion - gt_motion
+    plt.imshow(motion_diff[0].cpu().data.numpy().squeeze())
     plt.show()
 
 
@@ -118,6 +123,7 @@ def train_unsupervised(args, model, m_dict, reverse_m_dict, m_kernel):
     m_range = args.motion_range
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     best_test_acc = 0
+    train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
         im1, im2, gt_motion = generate_images(args, m_dict, reverse_m_dict)
@@ -134,7 +140,11 @@ def train_unsupervised(args, model, m_dict, reverse_m_dict, m_kernel):
         # loss += 0.01 * cross_entropy_loss
         loss.backward()
         optimizer.step()
-        logging.info('epoch %d, training loss: %.2f', epoch, loss.data[0])
+        train_loss.append(loss.data[0])
+        if len(train_loss) > 100:
+            train_loss.pop(0)
+        ave_loss = sum(train_loss) / float(len(train_loss))
+        logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
             best_test_acc = validate(args, model, m_dict, reverse_m_dict, m_kernel, best_test_acc)

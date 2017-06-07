@@ -55,6 +55,43 @@ class FullyConvNet2(nn.Module):
         return motion
 
 
+class FullyConvNet3(nn.Module):
+    def __init__(self, im_size, n_class):
+        super(FullyConvNet3, self).__init__()
+        self.conv1 = nn.Conv2d(2, 32, 3, 1, 1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn3 = nn.BatchNorm2d(32)
+        self.conv4 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn4 = nn.BatchNorm2d(32)
+        self.conv5 = nn.Conv2d(32, 32, 3, 1, 1)
+        self.bn5 = nn.BatchNorm2d(32)
+        self.conv6 = nn.Conv2d(32, 64, 3, 1, 1)
+        self.bn6 = nn.BatchNorm2d(64)
+        self.conv7 = nn.Conv2d(64, 64, 3, 1, 1)
+        self.bn7 = nn.BatchNorm2d(64)
+        self.conv8 = nn.Conv2d(64, 64, 3, 1, 1)
+        self.bn8 = nn.BatchNorm2d(64)
+        self.conv = nn.Conv2d(64, n_class, 3, 1, 1)
+        self.im_size = im_size
+        self.n_class = n_class
+
+    def forward(self, x1, x2):
+        x = torch.cat((x1, x2), 1)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x)))
+        x = F.relu(self.bn6(self.conv6(x)))
+        x = F.relu(self.bn7(self.conv7(x)))
+        x = F.relu(self.bn8(self.conv8(x)))
+        motion = self.conv(x)
+        return motion
+
+
 class FullyConvResNet(nn.Module):
     def __init__(self, im_size, n_class):
         super(FullyConvResNet, self).__init__()
