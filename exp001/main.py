@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict
-from models import Net
+from models import Net, Net2, Net3
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
@@ -138,7 +138,7 @@ def main():
     args = parse_args()
     logging.info(args)
     m_dict, reverse_m_dict = motion_dict(args.motion_range)
-    model = Net(args.image_size, len(m_dict))
+    model = Net3(args.image_size, len(m_dict))
     if torch.cuda.is_available():
         model = model.cuda()
     if args.train:
