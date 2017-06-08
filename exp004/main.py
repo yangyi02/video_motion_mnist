@@ -140,7 +140,7 @@ def main():
     m_dict, reverse_m_dict = motion_dict(args.motion_range)
     train_images, test_images = load_mnist()
     [_, im_channel, args.image_size, _] = train_images.shape
-    model = Net(args.image_size, im_channel, len(m_dict))
+    model = Net2(args.image_size, im_channel, len(m_dict))
     if torch.cuda.is_available():
         model = model.cuda()
     if args.train:

@@ -62,3 +62,4 @@ class Net2(nn.Module):
         x = F.avg_pool2d(x, self.im_size)
         motion = self.fc(x.view(-1, self.num_hidden))
         return motion
+

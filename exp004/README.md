@@ -18,10 +18,11 @@ output: global motion (i.e. 1x1x9)
 | scalar, motion range = 1, supervised 2 frames | 100 |
 | scalar, motion range = 2, supervised 2 frames | 100 |
 | scalar, motion range = 3, supervised 2 frames | 100 |
-| scalar, motion range = 5, supervised 2 frames | 98  |
+| scalar, motion range = 5, supervised 2 frames | 99  |
 | scalar, motion range = 1, unsupervised 2 frames | 100 |
-| scalar, motion range = 2, unsupervised 2 frames | |
-| scalar, motion range = 3, unsupervised 2 frames | 92 |
-| scalar, motion range = 5, unsupervised 2 frames | 73 |
+| scalar, motion range = 2, unsupervised 2 frames | 100 |
+| scalar, motion range = 3, unsupervised 2 frames | 96 |
+| scalar, motion range = 5, unsupervised 2 frames | 77 |
 
-Net3 gets better results than Net2, Net2 gets better results than Net
+Although unsupervised method only gives 77% accuracy on motion range = 5, it is hard for human eyes to see the reconstruction difference.
+Most of the mistakes happens on motion estimation very close to ground truth with 1 pixel difference.
