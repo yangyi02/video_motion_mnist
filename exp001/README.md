@@ -9,9 +9,10 @@ motion range = 2 corresponds to 25 motion classes.
 input: two frames (11x11x2)
 output: global motion (1x1x9)
 
-| Global motion | Training Loss | Testing Accuracy (%) |
+| Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
-| scalar, motion range = 1, supervised 2 frames | 0.00 | 100 |
-| scalar, motion range = 2, supervised 2 frames | 0.00 | 100 |
-| scalar, motion range = 1, unsupervised 2 frames | 0.00 | 100 |
-| scalar, motion range = 2, unsupervised 2 frames | 0.00 | 100 |
+| scalar, motion range = 1, supervised 2 frames | 100 |
+| scalar, motion range = 2, supervised 2 frames | 100 |
+| scalar, motion range = 3, supervised 2 frames | 99 |
+| scalar, motion range = 1, unsupervised 2 frames | 100 |
+| scalar, motion range = 2, unsupervised 2 frames | 99 |

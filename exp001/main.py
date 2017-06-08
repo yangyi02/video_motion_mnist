@@ -22,12 +22,15 @@ def validate(args, model, m_dict, reverse_m_dict, best_test_acc):
         with open(os.path.join(args.save_dir, 'final.pth'), 'w') as handle:
             torch.save(model.state_dict(), handle)
         best_test_acc = test_acc
+    logging.info('current best accuracy: %.2f', best_test_acc)
     return best_test_acc
 
 
 def train_supervised(args, model, m_dict, reverse_m_dict):
+    m_range = args.motion_range
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     best_test_acc = 0
+    train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
         im1, im2, gt_motion = generate_images(args, m_dict, reverse_m_dict)
@@ -40,7 +43,11 @@ def train_supervised(args, model, m_dict, reverse_m_dict):
         loss = F.cross_entropy(motion, gt_motion)
         loss.backward()
         optimizer.step()
-        logging.info('epoch %d, training loss: %.2f', epoch, loss.data[0])
+        train_loss.append(loss.data[0])
+        if len(train_loss) > 1000:
+            train_loss.pop(0)
+        ave_loss = sum(train_loss) / float(len(train_loss))
+        logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
             best_test_acc = validate(args, model, m_dict, reverse_m_dict, best_test_acc)
@@ -101,6 +108,7 @@ def train_unsupervised(args, model, m_dict, reverse_m_dict):
     m_range = args.motion_range
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     best_test_acc = 0
+    train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
         im1, im2, gt_motion = generate_images(args, m_dict, reverse_m_dict)
@@ -115,7 +123,11 @@ def train_unsupervised(args, model, m_dict, reverse_m_dict):
         loss = (pred - gt).pow(2).sum()
         loss.backward()
         optimizer.step()
-        logging.info('epoch %d, training loss: %.2f', epoch, loss.data[0])
+        train_loss.append(loss.data[0])
+        if len(train_loss) > 1000:
+            train_loss.pop(0)
+        ave_loss = sum(train_loss) / float(len(train_loss))
+        logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
             best_test_acc = validate(args, model, m_dict, reverse_m_dict, best_test_acc)
