@@ -1,6 +1,6 @@
 import numpy
-import learning_args
 import matplotlib.pyplot as plt
+import learning_args
 import logging
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
@@ -8,8 +8,8 @@ logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] 
 
 def motion_dict(m_range):
     m_dict, reverse_m_dict = {}, {}
-    x = numpy.linspace(-m_range, m_range, 2*m_range+1)
-    y = numpy.linspace(-m_range, m_range, 2*m_range+1)
+    x = numpy.linspace(-m_range, m_range, 2 * m_range + 1)
+    y = numpy.linspace(-m_range, m_range, 2 * m_range + 1)
     m_x, m_y = numpy.meshgrid(x, y)
     m_x, m_y, = m_x.reshape(-1).astype(int), m_y.reshape(-1).astype(int)
     for i in range(len(m_x)):

@@ -1,7 +1,7 @@
 import os
 import numpy
-from skimage import io, transform
 import matplotlib.pyplot as plt
+from skimage import io, transform
 import h5py
 
 import learning_args
@@ -63,6 +63,8 @@ def generate_images(args, images, m_dict, reverse_m_dict):
     for i in range(batch_size):
         (m_x[i], m_y[i]) = reverse_m_dict[m_label[i]]
     im2 = move_image(im1, m_x, m_y)
+    if False:
+        display(im1, im2, m_label)
     return im1, im2, m_label
 
 
