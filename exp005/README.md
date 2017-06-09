@@ -12,18 +12,18 @@ motion range = 3 corresponds to 49 motion classes.
 motion range = 5 corresponds to 121 motion classes.
 
 input: two frames (i.e. 28x28x2)
-output: global motion (i.e. 1x1x9)
+output: global motion (i.e. 28x28x9)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
-| scalar, motion range = 1, supervised 2 frames | 95 |
-| scalar, motion range = 2, supervised 2 frames | |
-| scalar, motion range = 3, supervised 2 frames | 82 |
-| scalar, motion range = 5, supervised 2 frames | |
-| scalar, motion range = 1, unsupervised 3 frames | 69 |
-| scalar, motion range = 2, unsupervised 3 frames | |
-| scalar, motion range = 3, unsupervised 3 frames | |
-| scalar, motion range = 5, unsupervised 3 frames | |
+| motion range = 1, supervised 2 frames | 95 |
+| motion range = 2, supervised 2 frames | |
+| motion range = 3, supervised 2 frames | 82 |
+| motion range = 5, supervised 2 frames | |
+| motion range = 1, unsupervised 3 frames | 69 |
+| motion range = 2, unsupervised 3 frames | |
+| motion range = 3, unsupervised 3 frames | |
+| motion range = 5, unsupervised 3 frames | |
 
 Only get to 69% optical flow estimation accuracy, because most of the MNIST images has 0 background
 And 0 background cannot estimate flow

@@ -37,7 +37,7 @@ def load_mnist(file_name='../mnist.h5'):
 
 
 def generate_images(args, images, m_dict, reverse_m_dict):
-    noise_magnitude = 0.5
+    noise = 0.5
     im_size, m_range, batch_size = args.image_size, args.motion_range, args.batch_size
     im_channel = images.shape[1]
     idx = numpy.random.permutation(images.shape[0])
@@ -49,8 +49,8 @@ def generate_images(args, images, m_dict, reverse_m_dict):
     for i in range(batch_size):
         (m_x[i], m_y[i]) = reverse_m_dict[m_label[i]]
         gt_motion[i, :, :, :] = m_label[i]
-    background = numpy.random.rand(batch_size, im_channel, im_size, im_size) * noise_magnitude
-    im1[im1 == 0] = background[im1 == 0]
+    bg = numpy.random.rand(batch_size, im_channel, im_size, im_size) * noise
+    im1[im1 == 0] = bg[im1 == 0]
     im2 = move_image(im1, m_x, m_y)
     im3 = move_image(im2, m_x, m_y)
     if False:
@@ -59,12 +59,12 @@ def generate_images(args, images, m_dict, reverse_m_dict):
 
 
 def move_image(im, m_x, m_y):
-    noise_magnitude = 0.5
+    noise = 0.5
     [batch_size, im_channel, _, im_size] = im.shape
     m_range_x = numpy.max(numpy.abs(m_x).reshape(-1))
     m_range_y = numpy.max(numpy.abs(m_y).reshape(-1))
     m_range = max(m_range_x, m_range_y).astype(int)
-    im_big = numpy.random.rand(batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2) * noise_magnitude
+    im_big = numpy.random.rand(batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2) * noise
     im_big[:, :, m_range:-m_range, m_range:-m_range] = im
     im_new = numpy.zeros((batch_size, im_channel, im_size, im_size))
     for i in range(batch_size):

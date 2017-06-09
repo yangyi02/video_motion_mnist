@@ -12,23 +12,23 @@ motion range = 3 corresponds to 49 motion classes.
 motion range = 5 corresponds to 121 motion classes.
 
 input: two frames (i.e. 28x28x2)
-output: global motion (i.e. 1x1x9)
+output: global motion (i.e. 28x28x9)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
-| scalar, motion range = 1, supervised 2 frames | 100 |
-| scalar, motion range = 2, supervised 2 frames | 99 |
-| scalar, motion range = 3, supervised 2 frames, FullyConvNet | 97 |
-| scalar, motion range = 5, supervised 2 frames, FullyConvNet | 50 |
-| scalar, motion range = 5, supervised 2 frames, FullyConvResNet | 71 |
-| scalar, motion range = 3, supervised 2 frames, UNet | 97 |
-| scalar, motion range = 5, supervised 2 frames, UNet | 94 |
-| scalar, motion range = 3, supervised 2 frames, UNet3, 32 resolution | 99 |
-| scalar, motion range = 5, supervised 2 frames, UNet3, 32 resolution | 96 |
-| scalar, motion range = 1, unsupervised 3 frames, UNet3, 32 resolution | 100 |
-| scalar, motion range = 2, unsupervised 3 frames, UNet3, 32 resolution | 99 |
-| scalar, motion range = 3, unsupervised 3 frames, UNet3, 32 resolution | 98 |
-| scalar, motion range = 5, unsupervised 3 frames, UNet3, 32 resolution | 49 |
+| motion range = 1, supervised 2 frames | 100 |
+| motion range = 2, supervised 2 frames | 99 |
+| motion range = 3, supervised 2 frames, FullyConvNet | 97 |
+| motion range = 5, supervised 2 frames, FullyConvNet | 50 |
+| motion range = 5, supervised 2 frames, FullyConvResNet | 71 |
+| motion range = 3, supervised 2 frames, UNet | 97 |
+| motion range = 5, supervised 2 frames, UNet | 94 |
+| motion range = 3, supervised 2 frames, UNet3, 32 resolution | 99 |
+| motion range = 5, supervised 2 frames, UNet3, 32 resolution | 96 |
+| motion range = 1, unsupervised 3 frames, UNet3, 32 resolution | 100 |
+| motion range = 2, unsupervised 3 frames, UNet3, 32 resolution | 99 |
+| motion range = 3, unsupervised 3 frames, UNet3, 32 resolution | 98 |
+| motion range = 5, unsupervised 3 frames, UNet3, 32 resolution | 49 |
 
 Take Home Message:
 
