@@ -1,6 +1,7 @@
 import numpy
-import learning_args
 import matplotlib.pyplot as plt
+
+import learning_args
 import logging
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
