@@ -18,7 +18,7 @@ class FullyConvNet(nn.Module):
         self.conv3 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
         self.bn3 = nn.BatchNorm2d(num_hidden)
         self.conv4 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
-        self.bn4 = nn.BatchNorm2d(num_hidden, num_hidden)
+        self.bn4 = nn.BatchNorm2d(num_hidden)
         self.conv5 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
         self.bn5 = nn.BatchNorm2d(num_hidden)
         self.conv6 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)

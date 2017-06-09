@@ -1,8 +1,6 @@
 global motion but using fully convolutional network to predict every pixel motion
 MNIST dataset
 use 3 frames instead of 2 frames, the third frame is the supervision
-Only get to 69% optical flow estimation accuracy, because most of the MNIST images has 0 background
-And 0 background cannot estimate flow
 
 ### Synthetic motion on synthetic images
 The images are randomly sampled from MNIST dataset.
@@ -26,4 +24,7 @@ output: global motion (i.e. 1x1x9)
 | scalar, motion range = 2, unsupervised 3 frames | |
 | scalar, motion range = 3, unsupervised 3 frames | |
 | scalar, motion range = 5, unsupervised 3 frames | |
+
+Only get to 69% optical flow estimation accuracy, because most of the MNIST images has 0 background
+And 0 background cannot estimate flow
 

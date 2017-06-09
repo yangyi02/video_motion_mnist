@@ -7,8 +7,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
-
 import matplotlib.pyplot as plt
+
 from learning_args import parse_args
 from data import generate_images, motion_dict, load_mnist
 from models import FullyConvNet, FullyConvResNet
@@ -109,7 +109,7 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         test_accuracy.append(accuracy.cpu().data[0])
         if args.display:
             m_range = args.motion_range
-            pred = construct_image(im1, motion, m_range, m_kernel, padding=m_range)
+            pred = construct_image(im2, motion, m_range, m_kernel, padding=m_range)
             visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_dict)
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
