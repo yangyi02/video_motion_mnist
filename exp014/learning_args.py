@@ -10,7 +10,7 @@ def parse_args():
     arg_parser.add_argument('--test', action='store_true')
     arg_parser.add_argument('--method', default='unsupervised')
     arg_parser.add_argument('--train_epoch', type=int, default=1000)
-    arg_parser.add_argument('--test_epoch', type=int, default=500)
+    arg_parser.add_argument('--test_epoch', type=int, default=100)
     arg_parser.add_argument('--test_interval', type=int, default=500)
     arg_parser.add_argument('--display', action='store_true')
     arg_parser.add_argument('--save_dir', default='./model')
