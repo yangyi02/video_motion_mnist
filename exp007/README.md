@@ -1,6 +1,6 @@
 local motion using fully convolutional network to predict every pixel motion
 MNIST dataset
-MNIST digit has motion, background has no motion
+Static background: digit has motion, background has no motion
 use 3 frames instead of 2 frames, the third frame is the supervision
 adding noise to MNIST background
 use L1 loss instead of L2 loss for unsupervised learning
