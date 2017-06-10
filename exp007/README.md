@@ -25,7 +25,7 @@ output: local motion (i.e. 28x28x9)
 | motion range = 5, supervised 2 frames, UNet | 96 |
 | motion range = 1, unsupervised 3 frames, UNet | 97 |
 | motion range = 2, unsupervised 3 frames, UNet | 97 |
-| motion range = 3, unsupervised 3 frames, UNet | 95 |
+| motion range = 3, unsupervised 3 frames, UNet | 94 |
 | motion range = 5, unsupervised 3 frames, UNet | |
 
 Take Home Message:
