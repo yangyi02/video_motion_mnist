@@ -188,7 +188,7 @@ class UNetU(nn.Module):
         self.bn10 = nn.BatchNorm2d(num_hidden)
         self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
-        self.conv = nn.Conv2d(num_hidden*2, n_class+1, 3, 1, 1)
+        self.conv = nn.Conv2d(num_hidden*2, n_class, 3, 1, 1)
 
         self.conv_a = nn.Conv2d(2, 1, 1, 1, 0)
         self.im_size = im_size
@@ -278,7 +278,7 @@ def construct_image(im, motion, m_range, m_kernel, padding=0):
     if torch.cuda.is_available():
         pred = pred.cuda()
     for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :-1, :, :].unsqueeze(0), m_kernel, None, 1, padding)
+        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
     return pred
 
 

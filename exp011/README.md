@@ -27,7 +27,7 @@ output: two local motion (i.e. 28x28x9x2)
 | motion range = 5, supervised 2 frames, UNet | 96 |
 | motion range = 1, unsupervised 3 frames, UNet | |
 | motion range = 2, unsupervised 3 frames, UNet | |
-| motion range = 3, unsupervised 3 frames, UNet | 87 |
+| motion range = 3, unsupervised 3 frames, UNet | 95 |
 | motion range = 5, unsupervised 3 frames, UNet | |
 
 Motivation
@@ -37,4 +37,7 @@ The motivation is hoping to avoid two pixels accumulate together.
 
 Take Home Message:
 
-This seems does not work.
+This actually works.
+If we change the disappear class to 0 motion, this simply goes back to the original accuracy.
+But this still does not improve the overall accuracy.
+But the overall attention map and motion prediction looks better.
