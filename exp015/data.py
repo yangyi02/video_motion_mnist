@@ -41,11 +41,11 @@ def generate_images(args, images, m_dict, reverse_m_dict):
     if numpy.random.rand() < 0.0:
         im1, im2, im3, _ = generate_moving_images(args, images, m_dict, reverse_m_dict)
     else:
-        im1, im2, im3 = generate_affine_images(args, images, m_dict, reverse_m_dict)
+        im1, im2, im3 = generate_perspective_images(args, images, m_dict, reverse_m_dict)
     return im1, im2, im3
 
 
-def generate_affine_images(args, images, m_dict, reverse_m_dict):
+def generate_perspective_images(args, images, m_dict, reverse_m_dict):
     noise = 0.5
     im_size, m_range, batch_size = args.image_size, args.motion_range, args.batch_size
     im_channel = images.shape[1]
@@ -53,16 +53,16 @@ def generate_affine_images(args, images, m_dict, reverse_m_dict):
     im1 = images[idx[0:batch_size], :, :, :]
 
     max_shift = 3
-    M = numpy.zeros((2, 3, batch_size))
+    M = numpy.zeros((3, 3, batch_size))
     for i in range(batch_size):
-        pts1 = numpy.float32([[0, 0], [im_size, 0], [im_size, im_size]])
-        shift = numpy.random.randint(-max_shift, max_shift, size=(3,2))
+        pts1 = numpy.float32([[0, 0], [im_size, 0], [0, im_size], [im_size, im_size]])
+        shift = numpy.random.randint(-max_shift, max_shift, size=(4,2))
         pts2 = (pts1 + shift).astype(numpy.float32)
-        M[:, :, i] = cv2.getAffineTransform(pts1, pts2)
+        M[:, :, i] = cv2.getPerspectiveTransform(pts1, pts2)
 
     bg = numpy.random.rand(batch_size, im_channel, im_size, im_size) * noise
-    im2 = affine_image(im1, M)
-    im3 = affine_image(im2, M)
+    im2 = perspective_image(im1, M)
+    im3 = perspective_image(im2, M)
     im1[im1 == 0] = bg[im1 == 0]
     im2[im2 == 0] = bg[im2 == 0]
     im3[im3 == 0] = bg[im3 == 0]
@@ -71,7 +71,7 @@ def generate_affine_images(args, images, m_dict, reverse_m_dict):
     return im1, im2, im3
 
 
-def affine_image(im, M):
+def perspective_image(im, M):
     [batch_size, im_channel, _, im_size] = im.shape
     # Hacky code right now for quick verification
     assert im_channel == 1, 'currently hacky code only assume image channel is 1'
@@ -79,7 +79,7 @@ def affine_image(im, M):
     for i in range(batch_size):
         # M = cv2.getRotationMatrix2D((im_size/2, im_size/2), angle[i], 1)
         # M = cv2.getRotationMatrix2D((0, 0), angle[i], 1)
-        im_new[i, 0, :, :] = cv2.warpAffine(im[i, :, :, :].squeeze(), M[:, :, i], (im_size, im_size))
+        im_new[i, 0, :, :] = cv2.warpPerspective(im[i, :, :, :].squeeze(), M[:, :, i], (im_size, im_size))
     return im_new
 
 
