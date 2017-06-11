@@ -160,9 +160,9 @@ class UNet(nn.Module):
         return motion
 
 
-class UNetU(nn.Module):
+class UNetBidirection(nn.Module):
     def __init__(self, im_size, im_channel, n_class, m_range, m_kernel):
-        super(UNetU, self).__init__()
+        super(UNetBidirection, self).__init__()
         num_hidden = 32
         self.conv0 = nn.Conv2d(2*im_channel, num_hidden, 3, 1, 1)
         self.bn0 = nn.BatchNorm2d(num_hidden)
@@ -278,7 +278,7 @@ def construct_image(im, motion, m_range, m_kernel, padding=0):
     if torch.cuda.is_available():
         pred = pred.cuda()
     for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
+        pred[i, :, :, :] = F.conv2d(im_expand[i, :-1, :, :].unsqueeze(0), m_kernel, None, 1, padding)
     return pred
 
 

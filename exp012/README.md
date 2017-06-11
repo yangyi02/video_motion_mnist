@@ -21,10 +21,10 @@ output: two local motion (i.e. 28x28x9x2)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
-| motion range = 1, supervised 2 frames, UNet | 100 |
-| motion range = 2, supervised 2 frames, UNet | 100 |
-| motion range = 3, supervised 2 frames, UNet | 98 |
-| motion range = 5, supervised 2 frames, UNet | 96 |
+| motion range = 1, supervised 2 frames, UNet |  |
+| motion range = 2, supervised 2 frames, UNet |  |
+| motion range = 3, supervised 2 frames, UNet | 99 |
+| motion range = 5, supervised 2 frames, UNet |  |
 | motion range = 1, unsupervised 3 frames, UNet | |
 | motion range = 2, unsupervised 3 frames, UNet | |
 | motion range = 3, unsupervised 3 frames, UNet | 95 |
