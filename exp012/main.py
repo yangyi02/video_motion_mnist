@@ -121,8 +121,7 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         loss_f = torch.abs(pred_f - gt).sum()
         loss_b = torch.abs(pred_b - gt).sum()
         loss = torch.abs(pred - gt).sum()
-        if epoch < 2000:
-            loss = loss + loss_f + loss_b
+        loss = loss + loss_f + loss_b
         loss.backward()
         optimizer.step()
         train_loss.append(loss.data[0])
