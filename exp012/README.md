@@ -7,17 +7,19 @@ the potential benefit of this is to handle occluded pixel prediction, because if
 adding noise to MNIST background
 use L1 loss instead of L2 loss for unsupervised learning
 
+It works!
+
 ### Synthetic motion on synthetic images
 The images are randomly sampled from MNIST dataset.
 MNIST contains 50000 training images and 10000 testing images.
-Image resolution: 28x28x1.
+Image resolution: 32x32x1.
 motion range = 1 corresponds to 9 + 1 motion classes.
 motion range = 2 corresponds to 25 + 1 motion classes.
 motion range = 3 corresponds to 49 + 1 motion classes.
 motion range = 5 corresponds to 121 + 1 motion classes.
 
-input: four frames (i.e. 28x28x4)
-output: two local motion (i.e. 28x28x9x2)
+input: four frames (i.e. 32x32x4)
+output: two local motion (i.e. 32x32x10x2)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
@@ -27,17 +29,16 @@ output: two local motion (i.e. 28x28x9x2)
 | motion range = 5, supervised 2 frames, UNet |  |
 | motion range = 1, unsupervised 3 frames, UNet | |
 | motion range = 2, unsupervised 3 frames, UNet | |
-| motion range = 3, unsupervised 3 frames, UNet | 95 |
+| motion range = 3, unsupervised 3 frames, UNet | 97 |
 | motion range = 5, unsupervised 3 frames, UNet | |
 
 Motivation
 
-This experiment differs from exp010 at additional motion class (disappear class).
-The motivation is hoping to avoid two pixels accumulate together. 
+This experiment contains additional motion class (disappear class).
+The motivation is to use later frames to predict the occluded part in the previous frames.
 
 Take Home Message:
 
 This actually works.
-If we change the disappear class to 0 motion, this simply goes back to the original accuracy.
-But this still does not improve the overall accuracy.
-But the overall attention map and motion prediction looks better.
+Bidirectional prediction indeed helps, with 1% improvement.
+Attention visualization also looks very reasonable.
