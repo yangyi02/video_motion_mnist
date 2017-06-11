@@ -165,11 +165,11 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
         pred, pred_f, motion_f, pred_b, motion_b, attn_f, attn_b = model(im1, im2, im4, im5, ones)
         gt = im3
-        loss_f = torch.abs(pred_f - gt).sum()
-        loss_b = torch.abs(pred_b - gt).sum()
+        # loss_f = torch.abs(pred_f - gt).sum()
+        # loss_b = torch.abs(pred_b - gt).sum()
         loss = torch.abs(pred - gt).sum()
-        if epoch < 1000:
-            loss = loss + loss_f + loss_b
+        # if epoch < 1000:
+        #     loss = loss + loss_f + loss_b
         loss.backward()
         optimizer.step()
         train_loss.append(loss.data[0])
@@ -202,10 +202,8 @@ def test_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
         pred, pred_f, motion_f, pred_b, motion_b, attn_f, attn_b = model(im1, im2, im4, im5, ones)
         pred_motion_f = motion_f.max(1)[1]
-        pred_motion_f[pred_motion_f == model.n_class-1] = m_dict[(0, 0)]
         accuracy_f = pred_motion_f.eq(gt_motion_f).float().sum() * 1.0 / gt_motion_f.numel()
         pred_motion_b = motion_b.max(1)[1]
-        pred_motion_b[pred_motion_b == model.n_class-1] = m_dict[(0, 0)]
         accuracy_b = pred_motion_b.eq(gt_motion_b).float().sum() * 1.0 / gt_motion_b.numel()
         test_accuracy.append(accuracy_f.cpu().data[0])
         test_accuracy.append(accuracy_b.cpu().data[0])
@@ -264,7 +262,7 @@ def main():
     if args.method == 'supervised':
         model = UNet(args.image_size, im_channel, len(m_dict))
     else:
-        model = UNetU(args.image_size, im_channel, len(m_dict)+1, args.motion_range, m_kernel)
+        model = UNetU(args.image_size, im_channel, len(m_dict), args.motion_range, m_kernel)
     if torch.cuda.is_available():
         model = model.cuda()
     if args.train:

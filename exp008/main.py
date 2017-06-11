@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 
 from learning_args import parse_args
 from data import generate_images, motion_dict, load_mnist
-from models import FullyConvNet, FullyConvResNet, UNet, UNetU
+from models import FullyConvNet, FullyConvResNet, UNet
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
 
-def validate_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc):
+def validate(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc):
     test_acc = test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel)
     if test_acc >= best_test_acc:
         logging.info('model save to %s', os.path.join(args.save_dir, 'final.pth'))
@@ -34,7 +34,7 @@ def train_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
     train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
-        im1, im2, im3, _, _, gt_motion, _ = generate_images(args, images, m_dict, reverse_m_dict)
+        im1, im2, im3, gt_motion = generate_images(args, images, m_dict, reverse_m_dict)
         im1 = Variable(torch.from_numpy(im1).float())
         im2 = Variable(torch.from_numpy(im2).float())
         gt_motion = Variable(torch.from_numpy(gt_motion))
@@ -53,30 +53,45 @@ def train_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
-            best_test_acc = validate_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc)
+            best_test_acc = validate(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc)
     return model
 
 
-def visualize_supervised(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_dict):
+def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict):
     plt.figure(1)
     plt.subplot(2,4,1)
-    plt.imshow(im2[0].cpu().data.numpy().squeeze(), cmap='gray')
+    plt.imshow(im1[0].cpu().data.numpy().squeeze(), cmap='gray')
+    plt.axis('off')
     plt.subplot(2,4,2)
-    plt.imshow(im3[0].cpu().data.numpy().squeeze(), cmap='gray')
+    plt.imshow(im2[0].cpu().data.numpy().squeeze(), cmap='gray')
+    plt.axis('off')
     plt.subplot(2,4,3)
+    plt.imshow(im3[0].cpu().data.numpy().squeeze(), cmap='gray')
+    plt.axis('off')
+    plt.subplot(2,4,4)
+    gt_m = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    plt.imshow(gt_m)
+    plt.axis('off')
+    plt.subplot(2,4,6)
+    pred_disappear = pred_motion[0].cpu().data.numpy().squeeze() == len(m_dict)
+    plt.imshow(pred_disappear, cmap='gray')
+    plt.axis('off')
+    plt.subplot(2,4,8)
+    # This line assumes disappeared pixels have motion 0, which should be changed in the future.
+    pred_motion[pred_motion == len(m_dict)] = m_dict[(0, 0)]
+    pred_m = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    plt.imshow(pred_m)
+    plt.axis('off')
+    plt.subplot(2,4,7)
     pred_im = pred[0].cpu().data.numpy().squeeze()
     pred_im[pred_im > 1] = 1
     pred_im[pred_im < 0] = 0
     plt.imshow(pred_im, cmap='gray')
-    plt.subplot(2,4,4)
-    im_diff = pred - im3
+    plt.axis('off')
+    plt.subplot(2,4,5)
+    im_diff = torch.abs(pred - im3)
     plt.imshow(im_diff[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.subplot(2,4,6)
-    gt_m = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(gt_m)
-    plt.subplot(2,4,7)
-    pred_m = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(pred_m)
+    plt.axis('off')
     plt.show()
 
 
@@ -99,7 +114,7 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
     m_range = args.motion_range
     test_accuracy = []
     for epoch in range(args.test_epoch):
-        im1, im2, im3, _, _, gt_motion, _ = generate_images(args, images, m_dict, reverse_m_dict)
+        im1, im2, im3, gt_motion = generate_images(args, images, m_dict, reverse_m_dict)
         im1 = Variable(torch.from_numpy(im1).float())
         im2 = Variable(torch.from_numpy(im2).float())
         im3 = Variable(torch.from_numpy(im3).float())
@@ -108,12 +123,14 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
         pred_motion = motion.max(1)[1]
-        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
-        test_accuracy.append(accuracy.cpu().data[0])
         if args.display:
             m_range = args.motion_range
             pred = construct_image(im2, motion, m_range, m_kernel, padding=m_range)
-            visualize_supervised(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_dict)
+            visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict)
+        # This line assumes disappeared pixels have motion 0, which should be changed in the future.
+        pred_motion[pred_motion == model.n_class-1] = m_dict[(0, 0)]
+        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
+        test_accuracy.append(accuracy.cpu().data[0])
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
     return test_accuracy
@@ -128,19 +145,8 @@ def construct_image(im, motion, m_range, m_kernel, padding=0):
     if torch.cuda.is_available():
         pred = pred.cuda()
     for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
+        pred[i, :, :, :] = F.conv2d(im_expand[i, :-1, :, :].unsqueeze(0), m_kernel, None, 1, padding)
     return pred
-
-
-def validate_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc):
-    test_acc = test_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel)
-    if test_acc >= best_test_acc:
-        logging.info('model save to %s', os.path.join(args.save_dir, 'final.pth'))
-        with open(os.path.join(args.save_dir, 'final.pth'), 'w') as handle:
-            torch.save(model.state_dict(), handle)
-        best_test_acc = test_acc
-    logging.info('current best accuracy: %.2f', best_test_acc)
-    return best_test_acc
 
 
 def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
@@ -150,30 +156,18 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
     train_loss = []
     for epoch in range(args.train_epoch):
         optimizer.zero_grad()
-        im1, im2, im3, im4, im5, gt_motion_f, gt_motion_b = generate_images(args, images, m_dict, reverse_m_dict)
+        im1, im2, im3, gt_motion = generate_images(args, images, m_dict, reverse_m_dict)
         im1 = Variable(torch.from_numpy(im1).float())
         im2 = Variable(torch.from_numpy(im2).float())
         im3 = Variable(torch.from_numpy(im3).float())
-        im4 = Variable(torch.from_numpy(im4).float())
-        im5 = Variable(torch.from_numpy(im5).float())
-        gt_motion_f = Variable(torch.from_numpy(gt_motion_f))
-        gt_motion_b = Variable(torch.from_numpy(gt_motion_b))
+        gt_motion = Variable(torch.from_numpy(gt_motion))
         if torch.cuda.is_available():
-            im1, im2, im3, im4, im5 = im1.cuda(), im2.cuda(), im3.cuda(), im4.cuda(), im5.cuda()
-            gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
-        pred, pred_f, motion_f, pred_b, motion_b, attn_f, attn_b = model(im1, im2, im4, im5)
-        # gt = im3[:, :, m_range:-m_range, m_range:-m_range]
-        gt = im3
+            im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
+        motion = model(im1, im2)
+        pred = construct_image(im2, motion, m_range, m_kernel, padding=0)
+        gt = im3[:, :, m_range:-m_range, m_range:-m_range]
         # loss = (pred - gt).pow(2).sum()  # L1 loss is better than L2 loss
-        loss_f = torch.abs(pred_f - gt).sum()
-        loss_b = torch.abs(pred_b - gt).sum()
         loss = torch.abs(pred - gt).sum()
-        attn_loss = torch.abs(attn_f - 0.5).sum()
-        # if epoch < 1000:
-        #     loss = loss + loss_f + loss_b + 0.01 * attn_loss
-        # else:
-        #     loss = loss + 0.01 * attn_loss
-        loss = loss + loss_f + loss_b + 0.01 * attn_loss
         loss.backward()
         optimizer.step()
         train_loss.append(loss.data[0])
@@ -183,73 +177,8 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         logging.info('epoch %d, training loss: %.2f, average training loss: %.2f', epoch, loss.data[0], ave_loss)
         if (epoch+1) % args.test_interval == 0:
             logging.info('epoch %d, testing', epoch)
-            best_test_acc = validate_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc)
+            best_test_acc = validate(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc)
     return model
-
-
-def test_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
-    m_range = args.motion_range
-    test_accuracy = []
-    for epoch in range(args.test_epoch):
-        im1, im2, im3, im4, im5, gt_motion_f, gt_motion_b = generate_images(args, images, m_dict, reverse_m_dict)
-        im1 = Variable(torch.from_numpy(im1).float())
-        im2 = Variable(torch.from_numpy(im2).float())
-        im3 = Variable(torch.from_numpy(im3).float())
-        im4 = Variable(torch.from_numpy(im4).float())
-        im5 = Variable(torch.from_numpy(im5).float())
-        gt_motion_f = Variable(torch.from_numpy(gt_motion_f))
-        gt_motion_b = Variable(torch.from_numpy(gt_motion_b))
-        if torch.cuda.is_available():
-            im1, im2, im3, im4, im5 = im1.cuda(), im2.cuda(), im3.cuda(), im4.cuda(), im5.cuda()
-            gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
-        pred, pred_f, motion_f, pred_b, motion_b, attn_f, attn_b = model(im1, im2, im4, im5)
-        pred_motion_f = motion_f.max(1)[1]
-        accuracy_f = pred_motion_f.eq(gt_motion_f).float().sum() * 1.0 / gt_motion_f.numel()
-        pred_motion_b = motion_b.max(1)[1]
-        accuracy_b = pred_motion_b.eq(gt_motion_b).float().sum() * 1.0 / gt_motion_b.numel()
-        test_accuracy.append(accuracy_f.cpu().data[0])
-        test_accuracy.append(accuracy_b.cpu().data[0])
-        if args.display:
-            m_range = args.motion_range
-            visualize_unsupervised(im1, im2, im3, im4, im5, pred, pred_motion_f, gt_motion_f, attn_f, pred_motion_b, gt_motion_b, attn_b, m_range, reverse_m_dict)
-    test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
-    logging.info('average testing accuracy: %.2f', test_accuracy)
-    return test_accuracy
-
-
-def visualize_unsupervised(im1, im2, im3, im4, im5, pred, pred_motion_f, gt_motion_f, attn_f, pred_motion_b, gt_motion_b, attn_b, m_range, reverse_m_dict):
-    plt.figure(1)
-    plt.subplot(4,3,1)
-    plt.imshow(im2[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.subplot(4,3,2)
-    plt.imshow(im3[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.subplot(4,3,3)
-    plt.imshow(im4[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.subplot(4,3,5)
-    pred_im = pred[0].cpu().data.numpy().squeeze()
-    pred_im[pred_im > 1] = 1
-    pred_im[pred_im < 0] = 0
-    plt.imshow(pred_im, cmap='gray')
-    plt.subplot(4,3,6)
-    im_diff = pred - im3
-    plt.imshow(im_diff[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.subplot(4,3,7)
-    gt_m_f = label2flow(gt_motion_f[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(gt_m_f)
-    plt.subplot(4,3,8)
-    pred_m_f = label2flow(pred_motion_f[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(pred_m_f)
-    plt.subplot(4,3,9)
-    plt.imshow(attn_f[0].cpu().data.numpy().squeeze())
-    plt.subplot(4,3,10)
-    gt_m_b = label2flow(gt_motion_b[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(gt_m_b)
-    plt.subplot(4,3,11)
-    pred_m_b = label2flow(pred_motion_b[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(pred_m_b)
-    plt.subplot(4,3,12)
-    plt.imshow(attn_b[0].cpu().data.numpy().squeeze())
-    plt.show()
 
 
 def main():
@@ -257,16 +186,12 @@ def main():
     logging.info(args)
     m_dict, reverse_m_dict, m_kernel = motion_dict(args.motion_range)
     m_kernel = Variable(torch.from_numpy(m_kernel).float())
-    if torch.cuda.is_available():
-        m_kernel = m_kernel.cuda()
     train_images, test_images = load_mnist()
     [_, im_channel, args.image_size, _] = train_images.shape
-    if args.method == 'supervised':
-        model = UNet(args.image_size, im_channel, len(m_dict))
-    else:
-        model = UNetU(args.image_size, im_channel, len(m_dict), args.motion_range, m_kernel)
+    model = UNet(args.image_size, im_channel, len(m_dict) + 1)
     if torch.cuda.is_available():
         model = model.cuda()
+        m_kernel = m_kernel.cuda()
     if args.train:
         if args.method == 'supervised':
             model = train_supervised(args, model, train_images, m_dict, reverse_m_dict, m_kernel)
@@ -274,10 +199,7 @@ def main():
             model = train_unsupervised(args, model, train_images, m_dict, reverse_m_dict, m_kernel)
     if args.test:
         model.load_state_dict(torch.load(args.init_model_path))
-        if args.method == 'supervised':
-            test_supervised(args, model, test_images, m_dict, reverse_m_dict, m_kernel)
-        else:
-            test_unsupervised(args, model, test_images, m_dict, reverse_m_dict, m_kernel)
+        test_supervised(args, model, test_images, m_dict, reverse_m_dict, m_kernel)
 
 if __name__ == '__main__':
     main()

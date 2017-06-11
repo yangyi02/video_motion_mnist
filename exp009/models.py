@@ -199,7 +199,7 @@ class UNetU(nn.Module):
         self.m_range = m_range
         self.m_kernel = m_kernel
 
-    def forward(self, im1, im2, im3):
+    def forward(self, im1, im2, im4, im5):
         x = torch.cat((im1, im2), 1)
         x = self.bn0(self.conv0(x))
         x1 = F.relu(self.bn1(self.conv1(x)))
@@ -229,7 +229,7 @@ class UNetU(nn.Module):
         x = torch.cat((x10, x1), 1)
         motion_f = self.conv(x)
 
-        x = torch.cat((im3, im2), 1)
+        x = torch.cat((im5, im4), 1)
         x = self.bn0(self.conv0(x))
         x1 = F.relu(self.bn1(self.conv1(x)))
         x2 = self.maxpool(x1)
@@ -259,9 +259,14 @@ class UNetU(nn.Module):
         motion_b = self.conv(x)
 
         pred_f = construct_image(im2, motion_f, self.m_range, self.m_kernel, padding=self.m_range)
-        pred_b = construct_image(im2, motion_b, self.m_range, self.m_kernel, padding=self.m_range)
+        pred_b = construct_image(im4, motion_b, self.m_range, self.m_kernel, padding=self.m_range)
 
-        return pred_f, motion_f, pred_b, motion_b
+        motion = torch.cat((motion_f, motion_b), 1)
+        attn = F.relu(self.bn_a(self.conv_a1(motion)))
+        attn = self.conv_a2(attn)
+        attn = F.sigmoid(attn)
+        pred = attn.expand_as(pred_f) * pred_f + (1 - attn.expand_as(pred_b)) * pred_b
+        return pred, pred_f, motion_f, pred_b, motion_b, attn, 1 - attn
 
 
 def construct_image(im, motion, m_range, m_kernel, padding=0):
