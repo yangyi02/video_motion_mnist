@@ -7,8 +7,6 @@ the potential benefit of this is to handle occluded pixel prediction, because if
 adding noise to MNIST background
 use L1 loss instead of L2 loss for unsupervised learning
 
-It works!
-
 ### Synthetic motion on synthetic images
 The images are randomly sampled from MNIST dataset.
 MNIST contains 50000 training images and 10000 testing images.
