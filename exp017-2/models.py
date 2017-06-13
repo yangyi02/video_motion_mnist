@@ -98,7 +98,7 @@ class FullyConvResNet(nn.Module):
 class UNet(nn.Module):
     def __init__(self, im_size, im_channel, n_class):
         super(UNet, self).__init__()
-        num_hidden = 32
+        num_hidden = 64
         self.conv0 = nn.Conv2d(2*im_channel, num_hidden, 3, 1, 1)
         self.bn0 = nn.BatchNorm2d(num_hidden)
         self.conv1 = nn.Conv2d(num_hidden, num_hidden, 3, 1, 1)
@@ -124,6 +124,7 @@ class UNet(nn.Module):
         self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
         self.conv = nn.Conv2d(num_hidden*2, n_class, 3, 1, 1)
+        self.conv_disappear = nn.Conv2d(num_hidden*2, 1, 3, 1, 1)
         self.im_size = im_size
         self.im_channel = im_channel
         self.n_class = n_class
@@ -157,7 +158,8 @@ class UNet(nn.Module):
         x10 = self.upsample(x10)
         x = torch.cat((x10, x1), 1)
         motion = self.conv(x)
-        return motion
+        disappear = F.sigmoid(self.conv_disappear(x))
+        return motion, disappear
 
 
 class UNetBidirection(nn.Module):
@@ -285,5 +287,3 @@ def construct_image(im, motion, disappear, m_range, m_kernel, padding=0):
     for i in range(im.size(0)):
         pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
     return pred
-
-
