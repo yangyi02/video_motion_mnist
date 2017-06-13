@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict, load_mnist
 from models import FullyConvNet, FullyConvResNet, UNet
+from visualize import visualize
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
@@ -57,7 +58,7 @@ def train_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
     return model
 
 
-def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict):
+def visualize1(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict):
     plt.figure(1)
     plt.subplot(2,4,1)
     plt.imshow(im1[0].cpu().data.numpy().squeeze(), cmap='gray')

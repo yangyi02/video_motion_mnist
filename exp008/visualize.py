@@ -3,9 +3,9 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_dict):
+def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict):
     img_size = im1.size(2)
-    width, height = get_img_size(2, 4, img_size)
+    width, height = get_img_size(2, 5, img_size)
     img = numpy.ones((height, width, 3))
 
     im1 = im1[0].cpu().data.numpy().transpose(1, 2, 0).repeat(3, 2)
@@ -20,10 +20,6 @@ def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_di
     x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
     img[y1:y2, x1:x2, :] = im3
 
-    pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
-    img[y1:y2, x1:x2, :] = pred_motion
-
     gt_motion = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
     x1, y1, x2, y2 = get_img_coordinate(2, 2, img_size)
     img[y1:y2, x1:x2, :] = gt_motion
@@ -37,6 +33,17 @@ def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_di
     im_diff = numpy.abs(pred - im3)
     x1, y1, x2, y2 = get_img_coordinate(2, 4, img_size)
     img[y1:y2, x1:x2, :] = im_diff
+
+    pred_disappear = pred_motion[0].cpu().data.numpy() == len(m_dict)
+    pred_disappear = pred_disappear.transpose(1, 2, 0).repeat(3, 2)
+    x1, y1, x2, y2 = get_img_coordinate(2, 5, img_size)
+    img[y1:y2, x1:x2, :] = pred_disappear
+
+    # This line assumes disappeared pixels have motion 0, which should be changed in the future.
+    pred_motion[pred_motion == len(m_dict)] = m_dict[(0, 0)]
+    pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
+    img[y1:y2, x1:x2, :] = pred_motion
 
     plt.figure(1)
     plt.imshow(img)
