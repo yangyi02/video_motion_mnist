@@ -28,7 +28,7 @@ output: two local motion (i.e. 32x32x10x2) and two disappear map (i.e. 32x32x1x2
 | motion range = 5, supervised 2 frames, UNet |  |
 | motion range = 1, unsupervised 3 frames, UNet | |
 | motion range = 2, unsupervised 3 frames, UNet | |
-| motion range = 3, unsupervised 3 frames, UNet | |
+| motion range = 3, unsupervised 3 frames, UNet | 48 |
 | motion range = 5, unsupervised 3 frames, UNet | |
 
 Motivation
@@ -38,4 +38,8 @@ The potential benefit is the computational speed, particularly when the low leve
 
 Take Home Message:
 
+Most of the failures happen at the background.
+I guess the reason is because the background moves much larger (6 pixels motion) when we use frame 1 and frame 3 as the input.
+I think either we should use more deeper model such as stacked hourglass network, or we should use multiple scale to handle this.
+The multiple scale could be a potential important direction to deal with larger motion.
 
