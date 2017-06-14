@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from learning_args import parse_args
 from data import generate_images, motion_dict, load_mnist
 from models import FullyConvNet, FullyConvResNet, UNet, UNet2, UNet3
+from visualize import visualize
 logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] %(message)s',
                             level=logging.INFO)
 
@@ -55,59 +56,6 @@ def train_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             logging.info('epoch %d, testing', epoch)
             best_test_acc = validate(args, model, images, m_dict, reverse_m_dict, m_kernel, best_test_acc)
     return model
-
-
-def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, m_dict, reverse_m_dict):
-    plt.figure(1)
-    plt.subplot(2,4,1)
-    plt.imshow(im1[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.axis('off')
-    plt.subplot(2,4,2)
-    plt.imshow(im2[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.axis('off')
-    plt.subplot(2,4,3)
-    plt.imshow(im3[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.axis('off')
-    plt.subplot(2,4,4)
-    gt_m = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(gt_m)
-    plt.axis('off')
-    plt.subplot(2,4,6)
-    pred_disappear = pred_motion[0].cpu().data.numpy().squeeze() == len(m_dict)
-    plt.imshow(pred_disappear, cmap='gray')
-    plt.axis('off')
-    plt.subplot(2,4,8)
-    # This line assumes disappeared pixels have motion 0, which should be changed in the future.
-    pred_motion[pred_motion == len(m_dict)] = m_dict[(0, 0)]
-    pred_m = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    plt.imshow(pred_m)
-    plt.axis('off')
-    plt.subplot(2,4,7)
-    pred_im = pred[0].cpu().data.numpy().squeeze()
-    pred_im[pred_im > 1] = 1
-    pred_im[pred_im < 0] = 0
-    plt.imshow(pred_im, cmap='gray')
-    plt.axis('off')
-    plt.subplot(2,4,5)
-    im_diff = torch.abs(pred - im3)
-    plt.imshow(im_diff[0].cpu().data.numpy().squeeze(), cmap='gray')
-    plt.axis('off')
-    plt.show()
-
-
-def label2flow(motion_label, m_range, reverse_m_dict):
-    motion = numpy.zeros((motion_label.shape[0], motion_label.shape[1], 2))
-    for i in range(motion_label.shape[0]):
-        for j in range(motion_label.shape[1]):
-            motion[i, j, :] = numpy.asarray(reverse_m_dict[motion_label[i, j]])
-    mag, ang = cv2.cartToPolar(motion[..., 0], motion[..., 1])
-    hsv = numpy.zeros((motion.shape[0], motion.shape[1], 3), dtype=float)
-    hsv[..., 0] = ang * 180 / numpy.pi / 2
-    hsv[..., 1] = 255
-    hsv[..., 2] = mag * 255.0 / m_range / numpy.sqrt(2)
-    # hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-    rgb = cv2.cvtColor(hsv.astype(numpy.uint8), cv2.COLOR_HSV2BGR)
-    return rgb
 
 
 def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
