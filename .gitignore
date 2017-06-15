@@ -4,3 +4,5 @@
 *.pyc
 *.pth
 model/
+robot-64
+robot_diff
