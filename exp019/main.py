@@ -1,13 +1,11 @@
 import os
 import numpy
-import cv2
 import logging
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
 
 from learning_args import parse_args
 from data import generate_images, motion_dict, load_mnist
