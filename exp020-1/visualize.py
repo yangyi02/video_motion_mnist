@@ -16,25 +16,29 @@ def visualize(im_input_last, im_output, pred, pred_motion, motion_prob, m_range,
     x1, y1, x2, y2 = get_img_coordinate(1, 2, img_size)
     img[y1:y2, x1:x2, :] = im2
 
+    im_diff = numpy.abs(im1 - im2)
+    x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
+    img[y1:y2, x1:x2, :] = im_diff
+
     pred = pred[0].cpu().data.numpy().transpose(1, 2, 0)
     pred[pred > 1] = 1
     pred[pred < 0] = 0
-    x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
+    x1, y1, x2, y2 = get_img_coordinate(2, 2, img_size)
     img[y1:y2, x1:x2, :] = pred
 
     im_diff = numpy.abs(pred - im2)
-    x1, y1, x2, y2 = get_img_coordinate(1, 4, img_size)
+    x1, y1, x2, y2 = get_img_coordinate(2, 3, img_size)
     img[y1:y2, x1:x2, :] = im_diff
 
     disappear = motion_prob[0, len(m_dict), :, :].unsqueeze(2)
     disappear = disappear.cpu().data.numpy().repeat(3, 2)
-    x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
+    x1, y1, x2, y2 = get_img_coordinate(2, 4, img_size)
     img[y1:y2, x1:x2, :] = disappear
 
     # This line assumes disappeared pixels have motion 0, which should be changed in the future.
     pred_motion[pred_motion == len(m_dict)] = m_dict[(0, 0)]
     pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
-    x1, y1, x2, y2 = get_img_coordinate(2, 2, img_size)
+    x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
     img[y1:y2, x1:x2, :] = pred_motion
 
     plt.figure(1)

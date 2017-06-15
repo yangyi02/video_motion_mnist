@@ -46,7 +46,7 @@ def load_robot_data(args, robot_meta, robot_dir):
         for j in range(n_image):
             image_name = os.path.join(robot_dir, str(dir_id), str(sub_dir_id), str(im_idx[j]) + '.jpg')
             im = numpy.array(Image.open(image_name)) / 255.0
-            images[i, :, :, j*im_channel:(j+1)*im_channel] = im[:, :64, :]
+            images[i, :, :, j*im_channel:(j+1)*im_channel] = im[:, -64:, :]
     images = images.transpose((0, 3, 1, 2))
     return images
 
@@ -54,7 +54,7 @@ def load_robot_data(args, robot_meta, robot_dir):
 def generate_batch(args, images):
     batch_size, height, width, im_channel = args.batch_size, 64, 64, 3
     n_image = images.shape[1] / im_channel
-    n = 4
+    n = 5
     idx = numpy.random.randint(0, n_image - n, size=batch_size)
     im_input = numpy.zeros((batch_size, im_channel*n, height, width))
     im_output = numpy.zeros((batch_size, im_channel, height, width))
