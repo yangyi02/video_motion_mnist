@@ -1,14 +1,13 @@
 local motion using fully convolutional network to predict every pixel motion
-Second attempt google robot video dataset
-https://sites.google.com/site/robotprediction/
-Static background: robot arm has motion, background has no motion
+Third attempt mpii human pose video dataset
+http://human-pose.mpi-inf.mpg.de/#download
 
-### Synthetic motion on synthetic images
-The images are randomly sampled from robot dataset.
-Robot contains 761250 training images, organized in a way below:
-793/9/23.jpg
-Image resolution: 512x640x3.
-But we downsample to 64x80x3.
+### Real motion on real images
+The images are the batch 1 from mpii human pose dataset.
+Mpii batch 1 contains 41821 training images, organized in a way below:
+1/013688563/00000068.jpg
+Image resolution: 480xwidthx3.
+But we downsample to 64xwidthx3.
 Add extra 1 dimension for predicting disappeared pixels, these pixels should be able to be predicted by looking at the motion and image segmentation.
 At this moment, we assume only foreground moves, hence the disappeared pixels are those background close to the foreground moving direction.
 motion range = 1 corresponds to 9+1 motion classes.
@@ -28,14 +27,3 @@ output: local motion (i.e. 28x28x10) and next frame (i.e. 28x28x3)
 
 Take Home Message:
 
-Second attempt succeed!
-
-I use frames that sampled after 2 frames each time, instead of original sequence.
-This helps getting larger motion and consistent motion, which makes the network able to predict future.
-After visualization, I indeed see the motion predictions and the reconstruction error is better than using previous frame.
-
-Two messages:
-1. More input frames better
-2. Larger motion ranges better
-
-However, the reconstructed frame still look very blur and many motions are not predicted very accurately.

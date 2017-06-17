@@ -1,0 +1,3 @@
+[submodule "stn.pytorch"]
+	path = stn.pytorch
+	url = https://github.com/fxia22/stn.pytorch.git

@@ -17,7 +17,7 @@ motion range = 3 corresponds to 49 motion classes.
 motion range = 5 corresponds to 121 motion classes.
 
 input: two frames (i.e. 28x28x2)
-output: two local motion (i.e. 32x32x9x2) and two disappear map (i.e. 32x32x1x2)
+output: one local motion (i.e. 32x32x9) and one disappear map (i.e. 32x32x1)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
