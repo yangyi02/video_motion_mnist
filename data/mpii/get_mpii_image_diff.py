@@ -5,7 +5,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 
-def get_diff_idx(input_dir='mpii-64', meta_file='mpii_meta.pkl', output_meta_file='mpii_meta_2.pkl'):
+def get_diff_idx(input_dir='mpii-128', meta_file='mpii_meta.pkl', output_meta_file='mpii_meta_2.pkl'):
     diff_file = open('./mpii_diff', 'w')
     meta = pickle.load(open(meta_file))
     for k, v in meta.iteritems():
@@ -34,18 +34,18 @@ def get_diff_idx(input_dir='mpii-64', meta_file='mpii_meta.pkl', output_meta_fil
 
 
 def display(im_old, im, im_diff):
-    img_size = 64
+    img_size = 128
     width, height = get_img_size(1, 3, img_size)
     img = numpy.ones((height, width, 3))
 
     x1, y1, x2, y2 = get_img_coordinate(1, 1, img_size)
-    img[y1:y2, x1:x2, :] = im_old[:64, :64, :]
+    img[y1:y2, x1:x2, :] = im_old[:img_size, :img_size, :]
 
     x1, y1, x2, y2 = get_img_coordinate(1, 2, img_size)
-    img[y1:y2, x1:x2, :] = im[:64, :64, :]
+    img[y1:y2, x1:x2, :] = im[:img_size, :img_size, :]
 
     x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
-    img[y1:y2, x1:x2, :] = im_diff[:64, :64, :]
+    img[y1:y2, x1:x2, :] = im_diff[:img_size, :img_size, :]
 
     # print('image diff: %.2f' % im_diff.sum())
 

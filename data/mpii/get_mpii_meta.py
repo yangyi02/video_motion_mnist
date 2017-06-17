@@ -2,7 +2,8 @@ import os
 import numpy
 import pickle
 
-def get_meta(input_dir='mpii-64', output_file='mpii_meta.pkl'):
+
+def get_meta(input_dir='mpii-128', output_file='mpii_meta.pkl'):
     meta = {}
     cnt = 0
     image_dirs = os.listdir(input_dir)

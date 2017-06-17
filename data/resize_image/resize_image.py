@@ -42,12 +42,12 @@ if __name__ == '__main__':
         image_name = image_name.strip()
         im = Image.open(os.path.join(input_dir, image_name))
         if im.size[0] < im.size[1]:
-            new_height = size
-            new_width = int(round(float(size) / im.size[0] * im.size[1]))
-        else:
             new_width = size
-            new_height = int(round(float(size) / im.size[1] * im.size[0]))
-        im = im.resize((new_height, new_width), Image.ANTIALIAS)
+            new_height = int(round(float(size) / im.size[0] * im.size[1]))
+        else:
+            new_height = size
+            new_width = int(round(float(size) / im.size[1] * im.size[0]))
+        im = im.resize((new_width, new_height), Image.ANTIALIAS)
         new_image_name = os.path.join(output_dir, image_name)
         im.save(new_image_name, 'JPEG')
         end_time = time()
