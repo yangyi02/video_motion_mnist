@@ -1,7 +1,7 @@
 import io
 import os
 import sys
-from PIL import Image
+import cv2
 import argparse
 import logging
 import time
@@ -9,25 +9,27 @@ import multiprocessing
 logging.getLogger().setLevel(logging.INFO)
 
 
-# def resize_image(image_file, input_dir, output_dir):
 def resize_image(image_file):
     image_name = image_file['image_name']
     input_dir = image_file['input_dir']
     output_dir = image_file['output_dir']
-    im = Image.open(os.path.join(input_dir, image_name))
-    if im.size[0] < im.size[1]:
-        new_width = size
-        new_height = int(round(float(size) / im.size[0] * im.size[1]))
+    im_size = image_file['im_size']
+    im = cv2.imread(os.path.join(input_dir, image_name))
+    if im.shape[0] < im.shape[1]:
+        new_height = im_size
+        new_width = int(round(float(im_size) / im.shape[0] * im.shape[1]))
     else:
-        new_height = size
-        new_width = int(round(float(size) / im.size[1] * im.size[0]))
-    im = im.resize((new_width, new_height), Image.ANTIALIAS)
-    new_file_name = os.path.join(output_dir, image_name)
-    im.save(new_file_name, 'JPEG')
+        new_width = im_size
+        new_height = int(round(float(im_size) / im.shape[1] * im.shape[0]))
+    # It is best to use cv2.INTER_AREA when shrinking an image
+    im = cv2.resize(im, (new_width, new_height), interpolation=cv2.INTER_AREA)
+    new_image_name = os.path.join(output_dir, image_name)
+    cv2.imwrite(new_image_name, im)
     im = None
-    logging.info('Resize image save to %s, height %d, width %d', new_file_name, new_height, new_width)
+    logging.info('Resize image save to %s, height %d, width %d', new_image_name, new_height, new_width)
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', default='')
     parser.add_argument('--output_dir', default='')
@@ -37,7 +39,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     input_dir = args.input_dir
     output_dir = args.output_dir
-    size = args.size
+    im_size = args.size
     file_list = args.file_list
 
     # Create output directories
@@ -55,7 +57,7 @@ if __name__ == '__main__':
     files = io.open(file_list).readlines()
     image_files = []
     for image_name in files:
-        image_file = {'input_dir': input_dir, 'output_dir': output_dir, 'image_name': image_name.strip()}
+        image_file = {'input_dir': input_dir, 'output_dir': output_dir, 'image_name': image_name.strip(), 'im_size': im_size}
         image_files.append(image_file)
 
     # Start multiprocessing image resize
@@ -68,3 +70,6 @@ if __name__ == '__main__':
     end_time = time.time()
     total_time = end_time - start_time
     logging.info('finish in %.2f hours', total_time / 60 / 60)
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,6 @@
 import io
 import os
-import sys
-from PIL import Image
+import cv2
 import argparse
 from time import time
 import logging
@@ -40,16 +39,17 @@ if __name__ == '__main__':
         num_images += 1
         start_time = time()
         image_name = image_name.strip()
-        im = Image.open(os.path.join(input_dir, image_name))
-        if im.size[0] < im.size[1]:
-            new_width = size
-            new_height = int(round(float(size) / im.size[0] * im.size[1]))
-        else:
+        im = cv2.imread(os.path.join(input_dir, image_name))
+        if im.shape[0] < im.shape[1]:
             new_height = size
-            new_width = int(round(float(size) / im.size[1] * im.size[0]))
-        im = im.resize((new_width, new_height), Image.ANTIALIAS)
+            new_width = int(round(float(size) / im.shape[0] * im.shape[1]))
+        else:
+            new_width = size
+            new_height = int(round(float(size) / im.shape[1] * im.shape[0]))
+        # It is best to use cv2.INTER_AREA when shrinking an image
+        im = cv2.resize(im, (new_width, new_height), interpolation=cv2.INTER_AREA)
         new_image_name = os.path.join(output_dir, image_name)
-        im.save(new_image_name, 'JPEG')
+        cv2.imwrite(new_image_name, im)
         end_time = time()
         total_time += end_time - start_time
         avg_time = total_time / num_images
