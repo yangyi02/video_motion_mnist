@@ -25,9 +25,9 @@ def motion_dict(m_range):
     return m_dict, reverse_m_dict, m_kernel
 
 
-def get_mpii_meta(meta_file='../mpii_meta.pkl', mpii_dir='../mpii-64'):
+def get_mpii_meta(meta_file='../data/mpii/mpii_meta.pkl', mpii_dir='../data/mpii/mpii-128'):
     mpii_meta = pickle.load(open(meta_file))
-    n = 5  # use 2 images as inputs and 1 image as output, hence need at least 3 images for training
+    n = 4  # use 2 images as inputs and 1 image as output, hence need at least 3 images for training
     new_mpii_meta = {}
     cnt = 0
     for k, v in mpii_meta.iteritems():
@@ -45,9 +45,9 @@ def get_mpii_meta(meta_file='../mpii_meta.pkl', mpii_dir='../mpii-64'):
 
 
 def generate_batch(args, mpii_meta):
-    batch_size, height, width, im_channel = args.batch_size, 64, 64, 3
+    batch_size, height, width, im_channel = args.batch_size, 128, 128, 3
     idx = numpy.random.permutation(len(mpii_meta))[0:batch_size]
-    n = 5
+    n = 4
     im_input = numpy.zeros((batch_size, im_channel * (n - 1), height, width))
     im_output = numpy.zeros((batch_size, im_channel, height, width))
     for i in range(batch_size):
@@ -69,15 +69,25 @@ def generate_batch(args, mpii_meta):
     return im_input, im_output
 
 
-def display(im1, im2, im3):
-    plt.figure(1)
-    plt.subplot(1, 3, 1)
-    plt.imshow(im1[0, :, :, :].squeeze().transpose(1, 2, 0))
-    plt.subplot(1, 3, 2)
-    plt.imshow(im2[0, :, :, :].squeeze().transpose(1, 2, 0))
-    plt.subplot(1, 3, 3)
-    plt.imshow(im3[0, :, :, :].squeeze().transpose(1, 2, 0))
-    plt.show()
+def display(images1, images2, images3):
+    for i in range(images1.shape[0]):
+        plt.figure(1)
+        plt.subplot(2, 3, 1)
+        im1 = images1[i, :, :, :].squeeze().transpose(1, 2, 0)
+        plt.imshow(im1)
+        plt.subplot(2, 3, 2)
+        im2 = images2[i, :, :, :].squeeze().transpose(1, 2, 0)
+        plt.imshow(im2)
+        plt.subplot(2, 3, 3)
+        im3 = images3[i, :, :, :].squeeze().transpose(1, 2, 0)
+        plt.imshow(im3)
+        plt.subplot(2, 3, 4)
+        im_diff1 = abs(im2 - im1)
+        plt.imshow(im_diff1)
+        plt.subplot(2, 3, 5)
+        im_diff2 = abs(im3 - im2)
+        plt.imshow(im_diff2)
+        plt.show()
 
 
 def unit_test():

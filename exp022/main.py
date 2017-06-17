@@ -38,15 +38,16 @@ def test_unsupervised(args, model, m_dict, reverse_m_dict, m_kernel):
             im_input, im_output = im_input.cuda(), im_output.cuda()
         motion, disappear = model(im_input)
         im_input_last = im_input[:, -3:, :, :]
-        pred = construct_image(im_input_last, motion, disappear, m_range, m_kernel, padding=0)
+        pred_im = construct_image(im_input_last, motion, disappear, m_range, m_kernel, padding=m_range)
+        pred = pred_im[:, :, m_range:-m_range, m_range:-m_range]
         gt = im_output[:, :, m_range:-m_range, m_range:-m_range]
         # loss = (pred - gt).pow(2).sum()  # L1 loss is better than L2 loss
         loss = torch.abs(pred - gt).sum()
         if args.display:
             m_range = args.motion_range
-            pred = construct_image(im_input_last, motion, disappear, m_range, m_kernel, padding=m_range)
+            # pred = construct_image(im_input_last, motion, disappear, m_range, m_kernel, padding=m_range)
             pred_motion = motion.max(1)[1]
-            visualize(im_input_last, im_output, pred, pred_motion, disappear, m_range, m_dict, reverse_m_dict)
+            visualize(im_input_last, im_output, pred_im, pred_motion, disappear, m_range, m_dict, reverse_m_dict)
         test_loss.append(loss.data[0])
     test_loss = numpy.mean(numpy.asarray(test_loss))
     logging.info('average testing loss: %.2f', test_loss)
