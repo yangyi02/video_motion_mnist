@@ -4,6 +4,3 @@
 *.pyc
 *.pth
 model/
-robot-64/
-mpii-64/
-mpii-128/
