@@ -1,1 +1,1 @@
-# video_motion
+# video_motion_mnist
