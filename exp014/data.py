@@ -56,7 +56,7 @@ def generate_affine_images(args, images, m_dict, reverse_m_dict):
     M = numpy.zeros((2, 3, batch_size))
     for i in range(batch_size):
         pts1 = numpy.float32([[0, 0], [im_size, 0], [im_size, im_size]])
-        shift = numpy.random.randint(-max_shift, max_shift, size=(3,2))
+        shift = numpy.random.randint(-max_shift, max_shift, size=(3, 2))
         pts2 = (pts1 + shift).astype(numpy.float32)
         M[:, :, i] = cv2.getAffineTransform(pts1, pts2)
 
