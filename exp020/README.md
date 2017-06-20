@@ -1,12 +1,4 @@
-large motion prediction. (Unfinished)
-with multi-step multi-scale motion prediction.
-
-local motion using fully convolutional network to predict every pixel motion
-MNIST dataset
-Digit has motion, background has motion
-use 3 frames instead of 2 frames, the third frame is the supervision
-adding noise to MNIST background
-use L1 loss instead of L2 loss for unsupervised learning
+continuous motion prediction, with spatial transformer networks.
 
 ### Synthetic motion on synthetic images
 The images are randomly sampled from MNIST dataset.
@@ -20,7 +12,7 @@ motion range = 3 corresponds to 49 motion classes.
 motion range = 5 corresponds to 121 motion classes.
 
 input: two frames (i.e. 28x28x2)
-output: one local motion (i.e. 32x32x9) and one disappear map (i.e. 32x32x1)
+output: one local motion (i.e. 32x32x2) and one disappear map (i.e. 32x32x1)
 
 | Global motion | Testing Accuracy (%) |
 | ------------- | ----------- | ----------- |
@@ -34,4 +26,8 @@ output: one local motion (i.e. 32x32x9) and one disappear map (i.e. 32x32x1)
 | motion range = 5, unsupervised 3 frames, UNet | |
 
 Take Home Message:
+
+Somehow the pytorch spatial transformer network training does not work!!!
+The loss does not decrease.
+Something is wrong.
 
