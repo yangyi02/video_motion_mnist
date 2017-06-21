@@ -71,7 +71,10 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         if args.display:
             m_range = args.motion_range
             pred = construct_image(im2, motion, m_range, m_kernel, padding=m_range)
-            visualize(im1, im2, im3, pred, pred_motion, m_range, m_dict, reverse_m_dict)
+            # visualize(im1, im2, im3, pred, pred_motion, m_range, m_dict, reverse_m_dict)
+            motion = F.softmax(motion)
+            flow = label2flow2(motion, reverse_m_dict)
+            visualize(im1, im2, im3, pred, pred_motion, flow, m_range, m_dict, reverse_m_dict)
         # This line assumes disappeared pixels have motion 0, which should be changed in the future.
         # pred_motion[pred_motion == model.n_class-1] = m_dict[(0, 0)]
         # accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
@@ -126,6 +129,23 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             with open(os.path.join(args.save_dir, 'final.pth'), 'w') as handle:
                 torch.save(model.state_dict(), handle)
     return model
+
+
+def label2flow2(motion, reverse_m_dict):
+    [batch_size, num_class, height, width] = motion.size()
+    kernel_x = Variable(torch.zeros(batch_size, num_class - 1, height, width))
+    kernel_y = Variable(torch.zeros(batch_size, num_class - 1, height, width))
+    if torch.cuda.is_available():
+        kernel_x = kernel_x.cuda()
+        kernel_y = kernel_y.cuda()
+    for i in range(num_class - 1):
+        (m_x, m_y) = reverse_m_dict[i]
+        kernel_x[:, i, :, :] = m_x
+        kernel_y[:, i, :, :] = m_y
+    flow = Variable(torch.zeros(batch_size, 2, height, width))
+    flow[:, 0, :, :] = (motion[:, :-1, :, :] * kernel_x).sum(1)
+    flow[:, 1, :, :] = (motion[:, :-1, :, :] * kernel_y).sum(1)
+    return flow
 
 
 def main():

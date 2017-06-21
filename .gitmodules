@@ -1,3 +1,6 @@
 [submodule "stn.pytorch"]
 	path = stn.pytorch
 	url = https://github.com/fxia22/stn.pytorch.git
+[submodule "OpticalFlowToolkit"]
+	path = OpticalFlowToolkit
+	url = https://github.com/liruoteng/OpticalFlowToolkit.git
