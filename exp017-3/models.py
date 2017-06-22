@@ -160,3 +160,4 @@ class UNet(nn.Module):
         motion = self.conv(x)
         disappear = F.sigmoid(self.conv_disappear(x))
         return motion, disappear
+
