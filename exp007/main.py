@@ -69,14 +69,13 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
         pred_motion = motion.max(1)[1]
+        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
+        test_accuracy.append(accuracy.cpu().data[0])
         if args.display:
-            m_range = args.motion_range
             m_mask = F.softmax(motion)
             pred = construct_image(im2, m_mask, m_kernel, m_range)
             flow = motion2flow(m_mask, reverse_m_dict)
             visualize(im1, im2, im3, pred, flow, gt_motion, m_range, reverse_m_dict)
-        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
-        test_accuracy.append(accuracy.cpu().data[0])
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
     return test_accuracy

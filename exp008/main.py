@@ -69,17 +69,16 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
         pred_motion = motion.max(1)[1]
+        # This line assumes disappeared pixels have motion 0, which should be changed in the future.
+        pred_motion[pred_motion == model.n_class - 1] = m_dict[(0, 0)]
+        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
+        test_accuracy.append(accuracy.cpu().data[0])
         if args.display:
-            m_range = args.motion_range
             m_mask = F.softmax(motion)
             pred = construct_image(im2, m_mask, m_kernel, m_range)
             flow = motion2flow(m_mask, reverse_m_dict)
-            disappear = motion[:, model.n_class-1, :, :]
+            disappear = m_mask[:, model.n_class - 1, :, :].unsqueeze(1)
             visualize(im1, im2, im3, pred, flow, gt_motion, disappear, m_range, reverse_m_dict)
-        # This line assumes disappeared pixels have motion 0, which should be changed in the future.
-        pred_motion[pred_motion == model.n_class-1] = m_dict[(0, 0)]
-        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
-        test_accuracy.append(accuracy.cpu().data[0])
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
     return test_accuracy
