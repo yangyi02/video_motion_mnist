@@ -71,8 +71,10 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         pred_motion = motion.max(1)[1]
         if args.display:
             m_range = args.motion_range
-            pred = construct_image(im2, motion, disappear, m_range, m_kernel, padding=m_range)
-            visualize(im1, im2, im3, pred, pred_motion, gt_motion, disappear, m_range, m_dict, reverse_m_dict)
+            motion = F.softmax(motion)
+            pred = construct_image(im2, motion, disappear, m_range, m_kernel)
+            flow = motion2flow(motion, reverse_m_dict)
+            visualize(im1, im2, im3, pred, flow, gt_motion, disappear, m_range, reverse_m_dict)
         accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
         test_accuracy.append(accuracy.cpu().data[0])
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
@@ -80,19 +82,32 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
     return test_accuracy
 
 
-def construct_image(im, motion, disappear, m_range, m_kernel, padding=0):
-    motion_mask = F.softmax(motion)
-    appear_mask = 1 - disappear
-    im = im * appear_mask
+def construct_image(im, motion_mask, disappear, m_range, m_kernel):
+    im = im * (1 - disappear)
     im_expand = im.expand_as(motion_mask) * motion_mask
-    height = im.size(2) - 2 * m_range + 2 * padding
-    width = im.size(3) - 2 * m_range + 2 * padding
-    pred = Variable(torch.Tensor(im.size(0), im.size(1), height, width))
+    pred = Variable(torch.Tensor(im.size()))
     if torch.cuda.is_available():
         pred = pred.cuda()
     for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
+        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, m_range)
     return pred
+
+
+def motion2flow(motion, reverse_m_dict):
+    [batch_size, num_class, height, width] = motion.size()
+    kernel_x = Variable(torch.zeros(batch_size, num_class - 1, height, width))
+    kernel_y = Variable(torch.zeros(batch_size, num_class - 1, height, width))
+    if torch.cuda.is_available():
+        kernel_x = kernel_x.cuda()
+        kernel_y = kernel_y.cuda()
+    for i in range(num_class - 1):
+        (m_x, m_y) = reverse_m_dict[i]
+        kernel_x[:, i, :, :] = m_x
+        kernel_y[:, i, :, :] = m_y
+    flow = Variable(torch.zeros(batch_size, 2, height, width))
+    flow[:, 0, :, :] = (motion[:, :-1, :, :] * kernel_x).sum(1)
+    flow[:, 1, :, :] = (motion[:, :-1, :, :] * kernel_y).sum(1)
+    return flow
 
 
 def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):

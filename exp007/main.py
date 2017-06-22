@@ -69,45 +69,43 @@ def test_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
         pred_motion = motion.max(1)[1]
-        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
-        test_accuracy.append(accuracy.cpu().data[0])
         if args.display:
             m_range = args.motion_range
-            pred = construct_image(im2, motion, m_range, m_kernel, padding=m_range)
-            flow = motion2flow(F.softmax(motion), reverse_m_dict)
+            m_mask = F.softmax(motion)
+            pred = construct_image(im2, m_mask, m_kernel, m_range)
+            flow = motion2flow(m_mask, reverse_m_dict)
             visualize(im1, im2, im3, pred, flow, gt_motion, m_range, reverse_m_dict)
+        accuracy = pred_motion.eq(gt_motion).float().sum() * 1.0 / gt_motion.numel()
+        test_accuracy.append(accuracy.cpu().data[0])
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
     return test_accuracy
 
 
-def construct_image(im, motion, m_range, m_kernel, padding=0):
-    mask = F.softmax(motion)
-    im_expand = im.expand_as(mask) * mask
-    height = im.size(2) - 2 * m_range + 2 * padding
-    width = im.size(3) - 2 * m_range + 2 * padding
-    pred = Variable(torch.Tensor(im.size(0), im.size(1), height, width))
+def construct_image(im, m_mask, m_kernel, m_range):
+    im_expand = im.expand_as(m_mask) * m_mask
+    pred = Variable(torch.Tensor(im.size()))
     if torch.cuda.is_available():
         pred = pred.cuda()
     for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
+        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, m_range)
     return pred
 
 
-def motion2flow(motion, reverse_m_dict):
-    [batch_size, num_class, height, width] = motion.size()
-    kernel_x = Variable(torch.zeros(batch_size, num_class - 1, height, width))
-    kernel_y = Variable(torch.zeros(batch_size, num_class - 1, height, width))
+def motion2flow(m_mask, reverse_m_dict):
+    [batch_size, num_class, height, width] = m_mask.size()
+    kernel_x = Variable(torch.zeros(batch_size, num_class, height, width))
+    kernel_y = Variable(torch.zeros(batch_size, num_class, height, width))
     if torch.cuda.is_available():
         kernel_x = kernel_x.cuda()
         kernel_y = kernel_y.cuda()
-    for i in range(num_class - 1):
+    for i in range(num_class):
         (m_x, m_y) = reverse_m_dict[i]
         kernel_x[:, i, :, :] = m_x
         kernel_y[:, i, :, :] = m_y
     flow = Variable(torch.zeros(batch_size, 2, height, width))
-    flow[:, 0, :, :] = (motion[:, :-1, :, :] * kernel_x).sum(1)
-    flow[:, 1, :, :] = (motion[:, :-1, :, :] * kernel_y).sum(1)
+    flow[:, 0, :, :] = (m_mask * kernel_x).sum(1)
+    flow[:, 1, :, :] = (m_mask * kernel_y).sum(1)
     return flow
 
 
@@ -126,7 +124,9 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
         if torch.cuda.is_available():
             im1, im2, im3, gt_motion = im1.cuda(), im2.cuda(), im3.cuda(), gt_motion.cuda()
         motion = model(im1, im2)
-        pred = construct_image(im2, motion, m_range, m_kernel, padding=0)
+        m_mask = F.softmax(motion)
+        pred = construct_image(im2, m_mask, m_kernel, m_range)
+        pred = pred[:, :, m_range:-m_range, m_range:-m_range]
         gt = im3[:, :, m_range:-m_range, m_range:-m_range]
         # loss = (pred - gt).pow(2).sum()  # L1 loss is better than L2 loss
         loss = torch.abs(pred - gt).sum()
@@ -148,12 +148,13 @@ def main():
     logging.info(args)
     m_dict, reverse_m_dict, m_kernel = motion_dict(args.motion_range)
     m_kernel = Variable(torch.from_numpy(m_kernel).float())
+    if torch.cuda.is_available():
+        m_kernel = m_kernel.cuda()
     train_images, test_images = load_mnist()
     [_, im_channel, args.image_size, _] = train_images.shape
     model = UNet(args.image_size, im_channel, len(m_dict))
     if torch.cuda.is_available():
         model = model.cuda()
-        m_kernel = m_kernel.cuda()
     if args.train:
         if args.method == 'supervised':
             model = train_supervised(args, model, train_images, m_dict, reverse_m_dict, m_kernel)

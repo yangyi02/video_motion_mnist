@@ -21,13 +21,15 @@ def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_di
     x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
     img[y1:y2, x1:x2, :] = im3
 
-    # pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    im_diff = numpy.abs(im2 - im3)
+    x1, y1, x2, y2 = get_img_coordinate(1, 4, img_size)
+    img[y1:y2, x1:x2, :] = im_diff
+
     pred_motion = pred_motion[0].cpu().data.numpy().transpose(1, 2, 0)
     optical_flow = flowlib.visualize_flow(pred_motion, m_range)
     x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
     img[y1:y2, x1:x2, :] = optical_flow / 255.0
 
-    # gt_motion = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
     gt_motion = label2motion(gt_motion[0].cpu().data.numpy().squeeze(), reverse_m_dict)
     optical_flow = flowlib.visualize_flow(gt_motion, m_range)
     x1, y1, x2, y2 = get_img_coordinate(2, 2, img_size)
@@ -38,10 +40,6 @@ def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_di
     pred[pred < 0] = 0
     x1, y1, x2, y2 = get_img_coordinate(2, 3, img_size)
     img[y1:y2, x1:x2, :] = pred
-
-    im_diff = numpy.abs(im2 - im3)
-    x1, y1, x2, y2 = get_img_coordinate(1, 4, img_size)
-    img[y1:y2, x1:x2, :] = im_diff
 
     im_diff = numpy.abs(pred - im3)
     x1, y1, x2, y2 = get_img_coordinate(2, 4, img_size)
