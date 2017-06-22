@@ -1,6 +1,7 @@
 import numpy
 import cv2
 import matplotlib.pyplot as plt
+import flowlib
 
 
 def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_dict):
@@ -20,19 +21,27 @@ def visualize(im1, im2, im3, pred, pred_motion, gt_motion, m_range, reverse_m_di
     x1, y1, x2, y2 = get_img_coordinate(1, 3, img_size)
     img[y1:y2, x1:x2, :] = im3
 
-    pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    # pred_motion = label2flow(pred_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    pred_motion = pred_motion[0].cpu().data.numpy().transpose(1, 2, 0)
+    optical_flow = flowlib.visualize_flow(pred_motion, m_range)
     x1, y1, x2, y2 = get_img_coordinate(2, 1, img_size)
-    img[y1:y2, x1:x2, :] = pred_motion
+    img[y1:y2, x1:x2, :] = optical_flow / 255.0
 
-    gt_motion = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    # gt_motion = label2flow(gt_motion[0].cpu().data.numpy().squeeze(), m_range, reverse_m_dict)
+    gt_motion = label2motion(gt_motion[0].cpu().data.numpy().squeeze(), reverse_m_dict)
+    optical_flow = flowlib.visualize_flow(gt_motion, m_range)
     x1, y1, x2, y2 = get_img_coordinate(2, 2, img_size)
-    img[y1:y2, x1:x2, :] = gt_motion
+    img[y1:y2, x1:x2, :] = optical_flow / 255.0
 
     pred = pred[0].cpu().data.numpy().transpose(1, 2, 0).repeat(3, 2)
     pred[pred > 1] = 1
     pred[pred < 0] = 0
     x1, y1, x2, y2 = get_img_coordinate(2, 3, img_size)
     img[y1:y2, x1:x2, :] = pred
+
+    im_diff = numpy.abs(im2 - im3)
+    x1, y1, x2, y2 = get_img_coordinate(1, 4, img_size)
+    img[y1:y2, x1:x2, :] = im_diff
 
     im_diff = numpy.abs(pred - im3)
     x1, y1, x2, y2 = get_img_coordinate(2, 4, img_size)
@@ -58,11 +67,15 @@ def get_img_coordinate(row, col, img_size):
     return x1, y1, x2, y2
 
 
-def label2flow(motion_label, m_range, reverse_m_dict):
+def label2motion(motion_label, reverse_m_dict):
     motion = numpy.zeros((motion_label.shape[0], motion_label.shape[1], 2))
     for i in range(motion_label.shape[0]):
         for j in range(motion_label.shape[1]):
             motion[i, j, :] = numpy.asarray(reverse_m_dict[motion_label[i, j]])
+    return motion
+
+
+def motion2color(motion, m_range):
     mag, ang = cv2.cartToPolar(motion[..., 0], motion[..., 1])
     hsv = numpy.zeros((motion.shape[0], motion.shape[1], 3), dtype=float)
     hsv[..., 0] = ang * 180 / numpy.pi / 2
