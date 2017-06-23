@@ -46,7 +46,7 @@ def train_supervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, im4, im5 = im1.cuda(), im2.cuda(), im3.cuda(), im4.cuda(), im5.cuda()
             ones = ones.cuda()
             gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
-        pred, pred_f, motion_f, disappear_f, pred_b, motion_b, disappear_b, attn_f, attn_b = model(im1, im2, im4, im5, ones)
+        pred, pred_f, motion_f, disappear_f, attn_f, pred_b, motion_b, disappear_b, attn_b = model(im1, im2, im4, im5, ones)
         motion_f = motion_f.transpose(1, 2).transpose(2, 3).contiguous().view(-1, model.n_class)
         gt_motion_f = gt_motion_f.contiguous().view(-1)
         motion_b = motion_b.transpose(1, 2).transpose(2, 3).contiguous().view(-1, model.n_class)
@@ -84,34 +84,39 @@ def test_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, im4, im5 = im1.cuda(), im2.cuda(), im3.cuda(), im4.cuda(), im5.cuda()
             ones = ones.cuda()
             gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
-        pred, pred_f, motion_f, disappear_f, pred_b, motion_b, disappear_b, attn_f, attn_b = model(im1, im2, im4, im5, ones)
+        pred, pred_f, motion_f, disappear_f, attn_f, pred_b, motion_b, disappear_b, attn_b = model(im1, im2, im4, im5, ones)
         pred_motion_f = motion_f.max(1)[1]
         pred_motion_b = motion_b.max(1)[1]
-        if args.display:
-            m_range = args.motion_range
-            visualize(im1, im2, im3, im4, im5, pred, pred_motion_f, gt_motion_f, disappear_f, attn_f, pred_motion_b, gt_motion_b, disappear_b, attn_b, m_range, m_dict, reverse_m_dict)
         accuracy_f = pred_motion_f.eq(gt_motion_f).float().sum() * 1.0 / gt_motion_f.numel()
         accuracy_b = pred_motion_b.eq(gt_motion_b).float().sum() * 1.0 / gt_motion_b.numel()
         test_accuracy.append(accuracy_f.cpu().data[0])
         test_accuracy.append(accuracy_b.cpu().data[0])
+        if args.display:
+            m_mask_f = F.softmax(motion_f)
+            flow_f = motion2flow(m_mask_f, reverse_m_dict)
+            m_mask_b = F.softmax(motion_b)
+            flow_b = motion2flow(m_mask_b, reverse_m_dict)
+            visualize(im1, im2, im3, im4, im5, pred, flow_f, gt_motion_f, disappear_f, attn_f, flow_b, gt_motion_b, disappear_b, attn_b, m_range, reverse_m_dict)
     test_accuracy = numpy.mean(numpy.asarray(test_accuracy))
     logging.info('average testing accuracy: %.2f', test_accuracy)
     return test_accuracy
 
 
-def construct_image(im, motion, disappear, m_range, m_kernel, padding=0):
-    motion_mask = F.softmax(motion)
-    appear_mask = 1 - disappear
-    im = im * appear_mask
-    im_expand = im.expand_as(motion_mask) * motion_mask
-    height = im.size(2) - 2 * m_range + 2 * padding
-    width = im.size(3) - 2 * m_range + 2 * padding
-    pred = Variable(torch.Tensor(im.size(0), im.size(1), height, width))
+def motion2flow(m_mask, reverse_m_dict):
+    [batch_size, num_class, height, width] = m_mask.size()
+    kernel_x = Variable(torch.zeros(batch_size, num_class, height, width))
+    kernel_y = Variable(torch.zeros(batch_size, num_class, height, width))
     if torch.cuda.is_available():
-        pred = pred.cuda()
-    for i in range(im.size(0)):
-        pred[i, :, :, :] = F.conv2d(im_expand[i, :, :, :].unsqueeze(0), m_kernel, None, 1, padding)
-    return pred
+        kernel_x = kernel_x.cuda()
+        kernel_y = kernel_y.cuda()
+    for i in range(num_class):
+        (m_x, m_y) = reverse_m_dict[i]
+        kernel_x[:, i, :, :] = m_x
+        kernel_y[:, i, :, :] = m_y
+    flow = Variable(torch.zeros(batch_size, 2, height, width))
+    flow[:, 0, :, :] = (m_mask * kernel_x).sum(1)
+    flow[:, 1, :, :] = (m_mask * kernel_y).sum(1)
+    return flow
 
 
 def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
@@ -134,7 +139,7 @@ def train_unsupervised(args, model, images, m_dict, reverse_m_dict, m_kernel):
             im1, im2, im3, im4, im5 = im1.cuda(), im2.cuda(), im3.cuda(), im4.cuda(), im5.cuda()
             ones = ones.cuda()
             gt_motion_f, gt_motion_b = gt_motion_f.cuda(), gt_motion_b.cuda()
-        pred, pred_f, motion_f, disappear_f, pred_b, motion_b, disappear_b, attn_f, attn_b = model(im1, im2, im4, im5, ones)
+        pred, pred_f, motion_f, disappear_f, attn_f, pred_b, motion_b, disappear_b, attn_b = model(im1, im2, im4, im5, ones)
         gt = im3
         # loss_f = torch.abs(pred_f - gt).sum()
         # loss_b = torch.abs(pred_b - gt).sum()
