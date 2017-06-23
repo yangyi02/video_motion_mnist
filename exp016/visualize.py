@@ -57,7 +57,7 @@ def visualize(im1, im2, im3, pred, pred_motion_f, gt_motion_f, disappear_f, attn
     img[y1:y2, x1:x2, :] = optical_flow / 255.0
 
     gt_motion = label2motion(gt_motion_b[0].cpu().data.numpy().squeeze(), reverse_m_dict)
-    optical_flow = flowlib.visualize_flow(pred_motion, m_range)
+    optical_flow = flowlib.visualize_flow(gt_motion, m_range)
     x1, y1, x2, y2 = get_img_coordinate(3, 2, img_size)
     img[y1:y2, x1:x2, :] = optical_flow / 255.0
 
