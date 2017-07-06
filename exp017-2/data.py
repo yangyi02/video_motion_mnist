@@ -69,9 +69,8 @@ def generate_images(args, images, m_dict, reverse_m_dict):
     bg1 = move_image_bg(bg2, m_b_x[:, 1], m_b_y[:, 1], m_range)
     bg4 = move_image_bg(bg3, m_f_x[:, 1], m_f_y[:, 1], m_range)
     bg5 = move_image_bg(bg4, m_f_x[:, 1], m_f_y[:, 1], m_range)
-    for i in range(batch_size):
-        gt_motion_f[im2 == 0] = bg_motion_f[im2 == 0]
-        gt_motion_b[im4 == 0] = bg_motion_b[im4 == 0]
+    gt_motion_f[im2 == 0] = bg_motion_f[im2 == 0]
+    gt_motion_b[im4 == 0] = bg_motion_b[im4 == 0]
     im1[im1 == 0] = bg1[im1 == 0]
     im2[im2 == 0] = bg2[im2 == 0]
     im3[im3 == 0] = bg3[im3 == 0]
